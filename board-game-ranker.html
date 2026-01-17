@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Game Ranker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input[type="text"], input[type="file"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .filters {
+            padding: 20px 30px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #333;
+            min-width: 80px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tag-cloud {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tag-cloud-item {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-cloud-item:hover {
+            background: #cce5ff;
+            transform: translateY(-2px);
+        }
+
+        .tag-cloud-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .tag-count {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.85em;
+        }
+
+        .game-list {
+            padding: 0;
+            min-height: 400px;
+        }
+
+        .game-list.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            padding: 20px 30px;
+        }
+
+        .game-list.grid-view .game-item {
+            flex-direction: column;
+            align-items: stretch;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .game-list.grid-view .rank {
+            font-size: 1.5em;
+        }
+
+        .game-list.grid-view .rank-controls {
+            flex-direction: row;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .game-list.compact .game-item {
+            padding: 8px 15px;
+        }
+
+        .game-list.compact .game-name {
+            font-size: 0.95em;
+        }
+
+        .game-list.compact .tags {
+            display: none;
+        }
+
+        .game-list.compact .delete-btn {
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+
+        .game-item {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-item:hover {
+            background: #f8f9fa;
+        }
+
+        .game-item:first-child {
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .rank {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 40px;
+        }
+
+        .rank-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .rank-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rank-btn:hover {
+            background: #5568d3;
+        }
+
+        .rank-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .game-info {
+            flex: 1;
+        }
+
+        .game-name {
+            font-size: 1.05em;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .game-name a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .game-name a:hover {
+            color: #667eea;
+        }
+
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+
+        .tag:hover {
+            background: #cce5ff;
+        }
+
+        .tag-input {
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .tag-input input {
+            width: 150px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .game-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .rank {
+                min-width: auto;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎲 Board Game Ranker</h1>
+            <p>Manage and rank your board game collection</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Add Game Manually</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="manualGameInput" placeholder="Enter game name...">
+                    <button onclick="addManualGame()">Add</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Import from CSV</label>
+                <input type="file" id="csvInput" accept=".csv,.txt" onchange="importCSV(event)">
+            </div>
+
+            <div class="button-group">
+                <button class="secondary" onclick="clearAllGames()">Clear All</button>
+            </div>
+        </div>
+
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-label">Total Games</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalTags">0</div>
+                <div class="stat-label">Unique Tags</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="untaggedGames">0</div>
+                <div class="stat-label">Untagged</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-row">
+                <span class="filter-label">View:</span>
+                <div class="filter-controls">
+                    <button class="view-btn active" onclick="setViewMode('list')">List</button>
+                    <button class="view-btn" onclick="setViewMode('grid')">Grid</button>
+                    <button class="view-btn active" onclick="setDisplayMode('expanded')">Expanded</button>
+                    <button class="view-btn" onclick="setDisplayMode('compact')">Compact</button>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <span class="filter-label">Show:</span>
+                <div class="filter-controls">
+                    <button class="view-btn active" onclick="setTopLimit('all')">All</button>
+                    <button class="view-btn" onclick="setTopLimit(10)">Top 10</button>
+                    <button class="view-btn" onclick="setTopLimit(25)">Top 25</button>
+                    <button class="view-btn" onclick="setTopLimit(50)">Top 50</button>
+                    <button class="view-btn" onclick="setTopLimit(100)">Top 100</button>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <span class="filter-label">Sort:</span>
+                <div class="filter-controls">
+                    <button class="view-btn active" onclick="setSortMode('rank')">By Rank</button>
+                    <button class="view-btn" onclick="setSortMode('alpha')">A-Z</button>
+                    <button class="view-btn" onclick="setSortMode('recent')">Recently Added</button>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <span class="filter-label">Filter:</span>
+                <div class="filter-controls">
+                    <button class="view-btn active" onclick="setSpecialFilter('all')">All Games</button>
+                    <button class="view-btn" onclick="setSpecialFilter('untagged')">Untagged Only</button>
+                    <button class="view-btn" onclick="toggleTagCloud()">
+                        <span id="tagCloudToggleText">Show Tag Cloud</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tag-cloud" id="tagCloud" style="display: none;"></div>
+
+        <div class="game-list" id="gameList">
+            <div class="empty-state">
+                <h3>No games yet!</h3>
+                <p>Add your first game above to get started.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let games = [];
+        let viewMode = 'list';
+        let displayMode = 'expanded';
+        let topLimit = 'all';
+        let sortMode = 'rank';
+        let specialFilter = 'all';
+        let selectedTags = [];
+        let showTagCloud = false;
+
+        function initApp() {
+            const stored = localStorage.getItem('boardGameRanker');
+            if (stored) {
+                games = JSON.parse(stored);
+                games.forEach((game, idx) => {
+                    if (!game.timestamp) {
+                        game.timestamp = Date.now() - (games.length - idx) * 1000;
+                    }
+                });
+            }
+            renderGames();
+            updateStats();
+            
+            const manualInput = document.getElementById('manualGameInput');
+            if (manualInput) {
+                manualInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addManualGame();
+                    }
+                });
+            }
+        }
+
+        window.addEventListener('load', initApp);
+
+        function saveGames() {
+            localStorage.setItem('boardGameRanker', JSON.stringify(games));
+        }
+
+        function addManualGame() {
+            const input = document.getElementById('manualGameInput');
+            const name = input.value.trim();
+            if (name) {
+                if (games.length >= 500) {
+                    alert('Maximum 500 games allowed!');
+                    return;
+                }
+                games.push({ name, tags: [], timestamp: Date.now() });
+                input.value = '';
+                saveGames();
+                renderGames();
+                updateStats();
+            }
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+                let added = 0;
+                const timestamp = Date.now();
+                lines.forEach((name, idx) => {
+                    if (name && games.length < 500) {
+                        games.push({ name, tags: [], timestamp: timestamp + idx });
+                        added++;
+                    }
+                });
+                saveGames();
+                renderGames();
+                updateStats();
+                event.target.value = '';
+                alert(`Added ${added} games!`);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderGames() {
+            const list = document.getElementById('gameList');
+            let displayGames = [...games];
+
+            if (specialFilter === 'untagged') {
+                displayGames = displayGames.filter(g => g.tags.length === 0);
+            }
+
+            if (selectedTags.length > 0) {
+                displayGames = displayGames.filter(g => 
+                    selectedTags.every(tag => g.tags.includes(tag))
+                );
+            }
+
+            if (sortMode === 'alpha') {
+                displayGames.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortMode === 'recent') {
+                displayGames.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            }
+
+            if (topLimit !== 'all') {
+                displayGames = displayGames.slice(0, topLimit);
+            }
+
+            list.className = 'game-list';
+            if (viewMode === 'grid') {
+                list.classList.add('grid-view');
+            }
+            if (displayMode === 'compact') {
+                list.classList.add('compact');
+            }
+
+            if (games.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No games yet!</h3>
+                        <p>Add your first game above to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (displayGames.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No games match your filters</h3>
+                        <p>Try adjusting your filter settings.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = displayGames.map((game, idx) => {
+                const actualIndex = games.indexOf(game);
+                const actualRank = sortMode === 'rank' ? actualIndex + 1 : games.indexOf(game) + 1;
+                const bggSearchUrl = `https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=${encodeURIComponent(game.name)}`;
+                
+                return `
+                    <div class="game-item" data-index="${actualIndex}">
+                        <div class="rank">#${actualRank}</div>
+                        ${sortMode === 'rank' ? `
+                        <div class="rank-controls">
+                            <button class="rank-btn" data-action="move-up" data-index="${actualIndex}" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                            <button class="rank-btn" data-action="move-down" data-index="${actualIndex}" ${idx === displayGames.length - 1 && displayGames.length === games.length ? 'disabled' : ''}>▼</button>
+                        </div>
+                        ` : ''}
+                        <div class="game-info">
+                            <div class="game-name">
+                                <a href="${bggSearchUrl}" target="_blank" rel="noopener noreferrer">${game.name}</a>
+                            </div>
+                            <div class="tags">
+                                ${game.tags.map(tag => `<span class="tag" data-tag="${tag}">${tag}</span>`).join('')}
+                                <div class="tag-input">
+                                    <input type="text" placeholder="Add tag..." data-game-index="${actualIndex}">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="delete-btn" data-action="delete" data-index="${actualIndex}">Delete</button>
+                    </div>
+                `;
+            }).join('');
+            
+            list.innerHTML = html;
+            attachEventListeners();
+        }
+
+        function attachEventListeners() {
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const index = parseInt(this.getAttribute('data-index'));
+                    deleteGame(index);
+                });
+            });
+            
+            document.querySelectorAll('.rank-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const action = this.getAttribute('data-action');
+                    const index = parseInt(this.getAttribute('data-index'));
+                    if (action === 'move-up') {
+                        moveGame(index, -1);
+                    } else if (action === 'move-down') {
+                        moveGame(index, 1);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.game-item .tag').forEach(tag => {
+                tag.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tagName = this.getAttribute('data-tag');
+                    toggleTagSelection(tagName);
+                });
+            });
+            
+            document.querySelectorAll('.tag-input input').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        const index = parseInt(this.getAttribute('data-game-index'));
+                        const tag = this.value.trim();
+                        if (tag && !games[index].tags.includes(tag)) {
+                            games[index].tags.push(tag);
+                            this.value = '';
+                            saveGames();
+                            renderGames();
+                            updateStats();
+                        }
+                    }
+                });
+            });
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.querySelectorAll('.filter-row:nth-child(1) .view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderGames();
+        }
+
+        function setDisplayMode(mode) {
+            displayMode = mode;
+            document.querySelectorAll('.filter-row:nth-child(1) .view-btn').forEach((btn, idx) => {
+                if (idx >= 2) btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderGames();
+        }
+
+        function setTopLimit(limit) {
+            topLimit = limit;
+            document.querySelectorAll('.filter-row:nth-child(2) .view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderGames();
+        }
+
+        function setSortMode(mode) {
+            sortMode = mode;
+            document.querySelectorAll('.filter-row:nth-child(3) .view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderGames();
+        }
+
+        function setSpecialFilter(filter) {
+            specialFilter = filter;
+            document.querySelectorAll('.filter-row:nth-child(4) .view-btn').forEach((btn, idx) => {
+                if (idx < 2) btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderGames();
+        }
+
+        function toggleTagCloud() {
+            showTagCloud = !showTagCloud;
+            const cloud = document.getElementById('tagCloud');
+            const toggleText = document.getElementById('tagCloudToggleText');
+            
+            if (showTagCloud) {
+                cloud.style.display = 'flex';
+                toggleText.textContent = 'Hide Tag Cloud';
+                updateTagCloud();
+            } else {
+                cloud.style.display = 'none';
+                toggleText.textContent = 'Show Tag Cloud';
+            }
+        }
+
+        function updateTagCloud() {
+            const allTags = {};
+            games.forEach(game => {
+                game.tags.forEach(tag => {
+                    allTags[tag] = (allTags[tag] || 0) + 1;
+                });
+            });
+
+            const sortedTags = Object.entries(allTags).sort((a, b) => b[1] - a[1]);
+            const cloud = document.getElementById('tagCloud');
+            
+            const tagHTML = sortedTags.map(([tag, count]) => {
+                const isSelected = selectedTags.includes(tag);
+                return `<div class="tag-cloud-item ${isSelected ? 'selected' : ''}" data-tag="${tag}">
+                    ${tag} <span class="tag-count">${count}</span>
+                </div>`;
+            }).join('');
+            
+            cloud.innerHTML = '<div style="width: 100%; font-weight: 600; color: #666; margin-bottom: 5px;">Filter by tags (click to toggle, multiple tags = AND):</div>' + tagHTML;
+            
+            document.querySelectorAll('.tag-cloud-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const tag = this.getAttribute('data-tag');
+                    toggleTagSelection(tag);
+                });
+            });
+        }
+
+        function toggleTagSelection(tag) {
+            const index = selectedTags.indexOf(tag);
+            if (index > -1) {
+                selectedTags.splice(index, 1);
+            } else {
+                selectedTags.push(tag);
+            }
+            if (showTagCloud) {
+                updateTagCloud();
+            }
+            renderGames();
+        }
+
+        function updateStats() {
+            document.getElementById('totalGames').textContent = games.length;
+            
+            const allTags = new Set();
+            games.forEach(game => game.tags.forEach(tag => allTags.add(tag)));
+            document.getElementById('totalTags').textContent = allTags.size;
+            
+            const untagged = games.filter(g => g.tags.length === 0).length;
+            document.getElementById('untaggedGames').textContent = untagged;
+        }
+
+        function deleteGame(index) {
+            if (!games[index]) {
+                alert('Error: Game not found');
+                return false;
+            }
+            
+            games.splice(index, 1);
+            saveGames();
+            renderGames();
+            updateStats();
+            return false;
+        }
+
+        function moveGame(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < games.length) {
+                const temp = games[index];
+                games[index] = games[newIndex];
+                games[newIndex] = temp;
+                saveGames();
+                renderGames();
+            }
+        }
+
+        function clearAllGames() {
+            if (confirm('Clear all games? This cannot be undone!')) {
+                games = [];
+                selectedTags = [];
+                saveGames();
+                renderGames();
+                updateStats();
+            }
+        }
+    </script>
+</body>
+</html>
