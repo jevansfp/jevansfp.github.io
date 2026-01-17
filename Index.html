@@ -1,12 +1,253 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Jason Evans</title>
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jason Evans</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.2em;
+            color: #888;
+            font-weight: 300;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #fff;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .about-placeholder {
+            background: #1a1a1a;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 4px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-link {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+            border: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .social-link:hover {
+            background: #2a2a2a;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .social-icon {
+            font-size: 1.2em;
+        }
+
+        .links-placeholder, .music-placeholder {
+            background: #1a1a1a;
+            border: 2px dashed #333;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: #666;
+        }
+
+        .edit-note {
+            background: #2a1a40;
+            border-left: 4px solid #764ba2;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #b8a0d6;
+        }
+
+        footer {
+            text-align: center;
+            padding-top: 40px;
+            margin-top: 60px;
+            border-top: 1px solid #333;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .social-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Welcome</h1>
-  <p>This is my personal website.</p>
-  <p>More coming soon.</p>
+    <div class="container">
+        <header>
+            <h1>Jason Evans</h1>
+            <p class="tagline">Developer • Creator • Enthusiast</p>
+        </header>
+
+        <section id="about">
+            <h2>About Me</h2>
+            <div class="about-placeholder">
+                Add your bio here! Replace this entire div with your own text about yourself.
+            </div>
+        </section>
+
+        <section id="socials">
+            <h2>Connect With Me</h2>
+            <div class="social-grid">
+                <a href="https://github.com/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🐙</span>
+                    <span>GitHub</span>
+                </a>
+                <a href="https://www.facebook.com/jason.l.evans.7" class="social-link" target="_blank">
+                    <span class="social-icon">📘</span>
+                    <span>Facebook</span>
+                </a>
+                <a href="https://x.com/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">𝕏</span>
+                    <span>X (Twitter)</span>
+                </a>
+                <a href="https://bsky.app/profile/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🦋</span>
+                    <span>Bluesky</span>
+                </a>
+                <a href="https://www.instagram.com/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">📷</span>
+                    <span>Instagram</span>
+                </a>
+                <a href="https://www.threads.net/@jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🧵</span>
+                    <span>Threads</span>
+                </a>
+                <a href="https://boardgamegeek.com/user/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🎲</span>
+                    <span>BoardGameGeek</span>
+                </a>
+                <a href="https://boardgamearena.com/player?id=jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🎮</span>
+                    <span>Board Game Arena</span>
+                </a>
+                <a href="https://www.reddit.com/user/jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🤖</span>
+                    <span>Reddit</span>
+                </a>
+                <a href="https://theforkiverse.com/@jevansfp" class="social-link" target="_blank">
+                    <span class="social-icon">🐘</span>
+                    <span>Mastodon (Forkiverse)</span>
+                </a>
+                <a href="mailto:jevansfp@gmail.com" class="social-link">
+                    <span class="social-icon">📧</span>
+                    <span>Email</span>
+                </a>
+                <a href="https://wa.me/qr/C67KLB5R6LOJM1" class="social-link" target="_blank">
+                    <span class="social-icon">💬</span>
+                    <span>WhatsApp</span>
+                </a>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2>Vibe Coding Tools</h2>
+            <div class="links-placeholder">
+                <p>🚀 Your coding projects will go here!</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">Add links to your tools and projects in this section.</p>
+            </div>
+        </section>
+
+        <section id="music">
+            <h2>Music</h2>
+            <div class="music-placeholder">
+                <p>🎵 Your music links will go here!</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">Add your favorite music, playlists, or artist links in this section.</p>
+            </div>
+        </section>
+
+        <section id="favorites">
+            <h2>Favorite Sites</h2>
+            <div class="links-placeholder">
+                <p>⭐ Your favorite websites will go here!</p>
+                <p style="margin-top: 10px; font-size: 0.9em;">Add links to your favorite websites in this section.</p>
+            </div>
+        </section>
+
+        <div class="edit-note">
+            <strong>📝 Easy Editing Guide:</strong><br>
+            To add your bio, replace the text in the "about-placeholder" div.<br>
+            To add links, replace the "links-placeholder" or "music-placeholder" divs with social-link style links (copy/paste the pattern from the social section above).
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Jason Evans. All rights reserved.</p>
+        </footer>
+    </div>
 </body>
 </html>
