@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FBF8F3;
+            --sage: #8B9D83;
+            --forest: #3D5A3D;
+            --clay: #C17B5A;
+            --charcoal: #2A2A2A;
+            --butter: #F4E4C1;
+            --shadow: rgba(42, 42, 42, 0.08);
+            --shadow-heavy: rgba(42, 42, 42, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, #EDE7DC 100%);
+            color: var(--charcoal);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--butter) 0%, transparent 70%);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeSlideDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--sage);
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .search-form {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 30px var(--shadow);
+            margin-bottom: 24px;
+            animation: fadeSlideUp 0.8s ease-out 0.2s both;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--forest);
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        input[type="number"],
+        select,
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #E8E4DD;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        select:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--sage);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(139, 157, 131, 0.1);
+        }
+
+        input::placeholder {
+            color: #A39C8F;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--forest) 0%, var(--sage) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(61, 90, 61, 0.3);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(61, 90, 61, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px 24px;
+            background: white;
+            color: var(--forest);
+            border: 2px solid var(--sage);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--sage);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.visible {
+            display: block;
+        }
+
+        .recipe-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: all 0.3s ease;
+            animation: cardSlideIn 0.5s ease-out both;
+            border-left: 4px solid var(--clay);
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px var(--shadow-heavy);
+        }
+
+        .recipe-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .recipe-source {
+            font-size: 11px;
+            color: var(--clay);
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .recipe-snippet {
+            font-size: 14px;
+            color: #5A5A5A;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .recipe-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-view {
+            background: var(--forest);
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: var(--sage);
+            transform: scale(1.02);
+        }
+
+        .btn-copy {
+            background: var(--butter);
+            color: var(--charcoal);
+        }
+
+        .btn-copy:hover {
+            background: var(--clay);
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+            border: 4px solid var(--butter);
+            border-top-color: var(--sage);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            color: var(--forest);
+            font-weight: 600;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--forest);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .error {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-left: 4px solid #D64545;
+            box-shadow: 0 4px 12px var(--shadow);
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .error-title {
+            font-weight: 700;
+            color: #D64545;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .error-message {
+            color: #5A5A5A;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeSlideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .search-form {
+                padding: 24px 20px;
+            }
+
+            .recipe-card {
+                padding: 20px;
+            }
+
+            .recipe-actions {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Recipe Finder</h1>
+            <div class="subtitle">Discover Your Next Meal</div>
+        </header>
+
+        <form id="searchForm" class="search-form">
+            <div class="form-group">
+                <label for="servings">Servings</label>
+                <input type="number" id="servings" min="1" max="20" value="4">
+            </div>
+
+            <div class="form-group">
+                <label for="cuisine">Cuisine</label>
+                <select id="cuisine">
+                    <option value="">Any</option>
+                    <option value="Italian">Italian</option>
+                    <option value="Mexican">Mexican</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="American">American</option>
+                    <option value="Mediterranean">Mediterranean</option>
+                    <option value="Thai">Thai</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="French">French</option>
+                    <option value="Korean">Korean</option>
+                    <option value="Vietnamese">Vietnamese</option>
+                    <option value="Greek">Greek</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ingredients">Ingredients (comma-separated)</label>
+                <input type="text" id="ingredients" placeholder="e.g., chicken, spinach, tomatoes">
+            </div>
+
+            <button type="submit" class="btn-primary" id="submitBtn">Find Recipes</button>
+        </form>
+
+        <div id="errorDisplay" class="error">
+            <div class="error-title">Oops!</div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Finding delicious recipes...</div>
+        </div>
+
+        <div id="resultsContainer" class="results-container">
+            <button id="generateNewBtn" class="btn-secondary">Generate a New 5 Recipes</button>
+            <div id="recipesList"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // RSS Feed URLs (using RSS2JSON as CORS proxy)
+        const RSS_FEEDS = [
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.bonappetit.com/feed/rss',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.epicurious.com/services/rss/recipes',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.seriouseats.com/feed',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://food52.com/recipes.rss',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://smittenkitchen.com/feed/'
+        ];
+
+        let allRecipes = [];
+        let displayedRecipes = new Set();
+
+        // DOM Elements
+        const searchForm = document.getElementById('searchForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+        const loading = document.getElementById('loading');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const recipesList = document.getElementById('recipesList');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const errorMessage = document.getElementById('errorMessage');
+        const toast = document.getElementById('toast');
+
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            displayedRecipes.clear();
+            await fetchRecipes();
+        });
+
+        generateNewBtn.addEventListener('click', async () => {
+            await fetchRecipes(true);
+        });
+
+        async function fetchRecipes(isRegenerate = false) {
+            hideError();
+            loading.classList.add('visible');
+            resultsContainer.classList.remove('visible');
+            submitBtn.disabled = true;
+            generateNewBtn.disabled = true;
+
+            try {
+                const servings = document.getElementById('servings').value;
+                const cuisine = document.getElementById('cuisine').value;
+                const ingredients = document.getElementById('ingredients').value.toLowerCase();
+
+                // Fetch from all RSS feeds
+                if (!isRegenerate || allRecipes.length === 0) {
+                    allRecipes = [];
+                    const feedPromises = RSS_FEEDS.map(url => 
+                        fetch(url)
+                            .then(res => res.json())
+                            .catch(err => ({ items: [] }))
+                    );
+
+                    const feedResults = await Promise.all(feedPromises);
+                    
+                    feedResults.forEach((feed, idx) => {
+                        if (feed.items) {
+                            feed.items.forEach(item => {
+                                const sourceName = getSourceName(RSS_FEEDS[idx]);
+                                allRecipes.push({
+                                    title: item.title || 'Untitled Recipe',
+                                    link: item.link || item.guid || '#',
+                                    source: sourceName,
+                                    snippet: stripHtml(item.description || item.content || '').substring(0, 150) + '...',
+                                    fullText: (item.title + ' ' + item.description + ' ' + item.content).toLowerCase()
+                                });
+                            });
+                        }
+                    });
+                }
+
+                if (allRecipes.length === 0) {
+                    throw new Error('Could not fetch recipes. Please try again later.');
+                }
+
+                // Filter recipes based on criteria
+                let filteredRecipes = allRecipes.filter(recipe => 
+                    !displayedRecipes.has(recipe.link)
+                );
+
+                if (cuisine) {
+                    filteredRecipes = filteredRecipes.filter(recipe => 
+                        recipe.fullText.includes(cuisine.toLowerCase())
+                    );
+                }
+
+                if (ingredients) {
+                    const ingredientList = ingredients.split(',').map(i => i.trim().toLowerCase());
+                    filteredRecipes = filteredRecipes.filter(recipe => 
+                        ingredientList.some(ing => recipe.fullText.includes(ing))
+                    );
+                }
+
+                // Get 5 recipes
+                const selectedRecipes = filteredRecipes.slice(0, 5);
+
+                if (selectedRecipes.length === 0) {
+                    throw new Error('No recipes found matching your criteria. Try adjusting your filters.');
+                }
+
+                // Mark as displayed
+                selectedRecipes.forEach(recipe => displayedRecipes.add(recipe.link));
+
+                displayRecipes(selectedRecipes);
+                resultsContainer.classList.add('visible');
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loading.classList.remove('visible');
+                submitBtn.disabled = false;
+                generateNewBtn.disabled = false;
+            }
+        }
+
+        function getSourceName(feedUrl) {
+            if (feedUrl.includes('bonappetit')) return 'Bon Appétit';
+            if (feedUrl.includes('epicurious')) return 'Epicurious';
+            if (feedUrl.includes('seriouseats')) return 'Serious Eats';
+            if (feedUrl.includes('food52')) return 'Food52';
+            if (feedUrl.includes('smittenkitchen')) return 'Smitten Kitchen';
+            return 'Recipe Source';
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        function displayRecipes(recipes) {
+            recipesList.innerHTML = recipes.map((recipe, idx) => `
+                <div class="recipe-card" style="animation-delay: ${idx * 0.1}s">
+                    <div class="recipe-title">${escapeHtml(recipe.title)}</div>
+                    <div class="recipe-source">${escapeHtml(recipe.source)}</div>
+                    <div class="recipe-snippet">${escapeHtml(recipe.snippet)}</div>
+                    <div class="recipe-actions">
+                        <button class="btn-small btn-view" onclick="window.open('${escapeHtml(recipe.link)}', '_blank')">
+                            View Recipe
+                        </button>
+                        <button class="btn-small btn-copy" onclick="copyToClipboard(${escapeHtml(JSON.stringify(recipe))})">
+                            Save to Clipboard
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function copyToClipboard(recipe) {
+            const text = `Recipe: ${recipe.title}\nSource: ${recipe.source}\nLink: ${recipe.link}\nSummary: ${recipe.snippet}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard!');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard');
+            });
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorDisplay.classList.add('visible');
+        }
+
+        function hideError() {
+            errorDisplay.classList.remove('visible');
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
