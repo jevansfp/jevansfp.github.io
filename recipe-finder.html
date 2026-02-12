@@ -114,7 +114,6 @@
             text-transform: uppercase;
         }
 
-        input[type="number"],
         select,
         input[type="text"] {
             width: 100%;
@@ -128,7 +127,6 @@
             transition: all 0.3s ease;
         }
 
-        input[type="number"]:focus,
         select:focus,
         input[type="text"]:focus {
             outline: none;
@@ -226,6 +224,14 @@
             box-shadow: 0 8px 30px var(--shadow-heavy);
         }
 
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
         .recipe-title {
             font-family: 'Cormorant Garamond', serif;
             font-size: 22px;
@@ -235,13 +241,26 @@
             line-height: 1.3;
         }
 
-        .recipe-source {
-            font-size: 12px;
-            color: var(--clay);
-            font-weight: 600;
+        .recipe-meta {
+            display: flex;
+            gap: 12px;
             margin-bottom: 12px;
-            letter-spacing: 0.5px;
+            flex-wrap: wrap;
+        }
+
+        .recipe-tag {
+            font-size: 11px;
+            color: white;
+            background: var(--clay);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
             text-transform: uppercase;
+        }
+
+        .recipe-tag.cuisine {
+            background: var(--sage);
         }
 
         .recipe-snippet {
@@ -442,32 +461,41 @@
 
         <form id="searchForm" class="search-form">
             <div class="form-group">
-                <label for="servings">Servings *</label>
-                <input type="number" id="servings" min="1" max="20" required value="4">
-            </div>
-
-            <div class="form-group">
                 <label for="cuisine">Cuisine</label>
                 <select id="cuisine">
                     <option value="">Any</option>
-                    <option value="Italian">Italian</option>
-                    <option value="Mexican">Mexican</option>
-                    <option value="Indian">Indian</option>
-                    <option value="Chinese">Chinese</option>
                     <option value="American">American</option>
-                    <option value="Mediterranean">Mediterranean</option>
-                    <option value="Thai">Thai</option>
-                    <option value="Japanese">Japanese</option>
+                    <option value="British">British</option>
+                    <option value="Canadian">Canadian</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Croatian">Croatian</option>
+                    <option value="Dutch">Dutch</option>
+                    <option value="Egyptian">Egyptian</option>
                     <option value="French">French</option>
-                    <option value="Korean">Korean</option>
-                    <option value="Vietnamese">Vietnamese</option>
                     <option value="Greek">Greek</option>
+                    <option value="Indian">Indian</option>
+                    <option value="Irish">Irish</option>
+                    <option value="Italian">Italian</option>
+                    <option value="Jamaican">Jamaican</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Kenyan">Kenyan</option>
+                    <option value="Malaysian">Malaysian</option>
+                    <option value="Mexican">Mexican</option>
+                    <option value="Moroccan">Moroccan</option>
+                    <option value="Polish">Polish</option>
+                    <option value="Portuguese">Portuguese</option>
+                    <option value="Russian">Russian</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="Thai">Thai</option>
+                    <option value="Tunisian">Tunisian</option>
+                    <option value="Turkish">Turkish</option>
+                    <option value="Vietnamese">Vietnamese</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="ingredients">Ingredients (comma-separated)</label>
-                <input type="text" id="ingredients" placeholder="e.g., chicken, spinach, tomatoes">
+                <label for="ingredient">Main Ingredient</label>
+                <input type="text" id="ingredient" placeholder="e.g., chicken, beef, pasta">
             </div>
 
             <button type="submit" class="btn-primary" id="submitBtn">Find Recipes</button>
@@ -492,21 +520,14 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // Google Custom Search API Configuration
-        const API_KEY = 'AIzaSyCAzh1fZxdmkcqkx5ckFi2OWvs9BX_Fk2Y';
-        const SEARCH_ENGINE_ID = 'a0c69be44cdde4978';
+        // TheMealDB API (completely free, no key needed!)
+        const API_BASE = 'https://www.themealdb.com/api/json/v1/1';
 
         // Session state
-        let currentSearch = {
-            servings: '',
-            cuisine: '',
-            ingredients: '',
-            excludedUrls: new Set(),
-            excludedTitles: new Set(),
-            currentPage: 1,
-            queryVariants: ['easy', 'quick', 'best', 'simple', 'homemade'],
-            currentVariantIndex: 0
-        };
+        let allRecipes = [];
+        let displayedRecipeIds = new Set();
+        let currentCuisine = '';
+        let currentIngredient = '';
 
         // DOM Elements
         const searchForm = document.getElementById('searchForm');
@@ -523,21 +544,12 @@
         searchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const servings = document.getElementById('servings').value;
-            const cuisine = document.getElementById('cuisine').value;
-            const ingredients = document.getElementById('ingredients').value;
+            currentCuisine = document.getElementById('cuisine').value;
+            currentIngredient = document.getElementById('ingredient').value.trim();
 
-            // Reset session state for new search
-            currentSearch = {
-                servings,
-                cuisine,
-                ingredients,
-                excludedUrls: new Set(),
-                excludedTitles: new Set(),
-                currentPage: 1,
-                queryVariants: ['easy', 'quick', 'best', 'simple', 'homemade'],
-                currentVariantIndex: 0
-            };
+            // Reset displayed recipes for new search
+            displayedRecipeIds.clear();
+            allRecipes = [];
 
             await performSearch();
         });
@@ -555,18 +567,38 @@
             generateNewBtn.disabled = true;
 
             try {
-                const recipes = await fetchRecipes(isRegenerate);
-                
-                if (recipes.length === 0) {
-                    showError('No recipes found. Try adjusting your search criteria.');
-                    loading.classList.remove('visible');
-                    submitBtn.disabled = false;
-                    generateNewBtn.disabled = false;
-                    return;
+                // Fetch recipes if we don't have enough
+                if (!isRegenerate || allRecipes.length < 10) {
+                    await fetchRecipes();
                 }
 
-                displayRecipes(recipes);
+                // Get 5 recipes that haven't been shown
+                const availableRecipes = allRecipes.filter(r => !displayedRecipeIds.has(r.idMeal));
+                
+                if (availableRecipes.length === 0) {
+                    // Fetch more if we've shown everything
+                    await fetchRecipes();
+                    const newAvailable = allRecipes.filter(r => !displayedRecipeIds.has(r.idMeal));
+                    
+                    if (newAvailable.length === 0) {
+                        showError('No more recipes found. Try different search criteria or clear your search to start over.');
+                        loading.classList.remove('visible');
+                        submitBtn.disabled = false;
+                        generateNewBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                const recipesToShow = allRecipes
+                    .filter(r => !displayedRecipeIds.has(r.idMeal))
+                    .slice(0, 5);
+
+                // Mark as displayed
+                recipesToShow.forEach(r => displayedRecipeIds.add(r.idMeal));
+
+                displayRecipes(recipesToShow);
                 resultsContainer.classList.add('visible');
+
             } catch (error) {
                 showError(error.message);
             } finally {
@@ -576,136 +608,134 @@
             }
         }
 
-        async function fetchRecipes(isRegenerate = false) {
-            let allResults = [];
-            let attempts = 0;
-            const maxAttempts = 5;
+        async function fetchRecipes() {
+            let newRecipes = [];
 
-            while (allResults.length < 5 && attempts < maxAttempts) {
-                attempts++;
-                
-                const query = buildQuery(isRegenerate && attempts > 1);
-                const startIndex = isRegenerate ? (currentSearch.currentPage * 10) + 1 : 1;
-
-                try {
-                    const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}&num=10&start=${startIndex}`;
-                    
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
-                    }
-
+            try {
+                // Search by cuisine if specified
+                if (currentCuisine) {
+                    const response = await fetch(`${API_BASE}/filter.php?a=${currentCuisine}`);
                     const data = await response.json();
-
-                    if (!data.items || data.items.length === 0) {
-                        // Try broadening the query
-                        if (currentSearch.cuisine && attempts < maxAttempts - 1) {
-                            currentSearch.cuisine = '';
-                            continue;
-                        } else if (currentSearch.ingredients && attempts < maxAttempts - 1) {
-                            currentSearch.ingredients = '';
-                            continue;
-                        }
-                        break;
+                    if (data.meals) {
+                        newRecipes = data.meals;
                     }
-
-                    const validRecipes = data.items
-                        .filter(item => isValidRecipe(item))
-                        .filter(item => !currentSearch.excludedUrls.has(item.link))
-                        .filter(item => !currentSearch.excludedTitles.has(item.title))
-                        .map(item => ({
-                            title: item.title,
-                            link: item.link,
-                            source: item.displayLink,
-                            snippet: item.snippet || ''
-                        }));
-
-                    allResults = allResults.concat(validRecipes);
-
-                    // Mark these as used
-                    validRecipes.forEach(recipe => {
-                        currentSearch.excludedUrls.add(recipe.link);
-                        currentSearch.excludedTitles.add(recipe.title);
-                    });
-
-                    if (allResults.length < 5 && data.queries?.nextPage) {
-                        currentSearch.currentPage++;
-                    } else {
-                        break;
-                    }
-                } catch (error) {
-                    throw new Error(`Failed to fetch recipes: ${error.message}`);
                 }
+                // Search by ingredient if specified
+                else if (currentIngredient) {
+                    const response = await fetch(`${API_BASE}/filter.php?i=${currentIngredient}`);
+                    const data = await response.json();
+                    if (data.meals) {
+                        newRecipes = data.meals;
+                    }
+                }
+                // If no filters, get random recipes
+                else {
+                    // Fetch 10 random recipes
+                    const randomPromises = Array(10).fill(null).map(() => 
+                        fetch(`${API_BASE}/random.php`).then(r => r.json())
+                    );
+                    const randomResults = await Promise.all(randomPromises);
+                    newRecipes = randomResults.map(r => r.meals[0]).filter(Boolean);
+                }
+
+                if (newRecipes.length === 0) {
+                    throw new Error('No recipes found. Try different search criteria.');
+                }
+
+                // Fetch full details for each recipe
+                const detailPromises = newRecipes.map(recipe => 
+                    fetch(`${API_BASE}/lookup.php?i=${recipe.idMeal}`)
+                        .then(r => r.json())
+                        .then(data => data.meals[0])
+                );
+
+                const detailedRecipes = await Promise.all(detailPromises);
+                
+                // Add to our collection (avoiding duplicates)
+                detailedRecipes.forEach(recipe => {
+                    if (!allRecipes.find(r => r.idMeal === recipe.idMeal)) {
+                        allRecipes.push(recipe);
+                    }
+                });
+
+                // Shuffle for variety
+                allRecipes.sort(() => Math.random() - 0.5);
+
+            } catch (error) {
+                throw new Error('Failed to fetch recipes. Please try again.');
             }
-
-            if (isRegenerate) {
-                currentSearch.currentPage++;
-            }
-
-            return allResults.slice(0, 5);
-        }
-
-        function buildQuery(useVariant = false) {
-            let parts = [];
-
-            parts.push(`${currentSearch.servings} servings`);
-
-            if (currentSearch.cuisine) {
-                parts.push(currentSearch.cuisine);
-            }
-
-            parts.push('recipe');
-
-            if (currentSearch.ingredients) {
-                parts.push(currentSearch.ingredients);
-            }
-
-            if (useVariant) {
-                const variant = currentSearch.queryVariants[currentSearch.currentVariantIndex];
-                parts.push(variant);
-                currentSearch.currentVariantIndex = (currentSearch.currentVariantIndex + 1) % currentSearch.queryVariants.length;
-            }
-
-            return parts.join(' ');
-        }
-
-        function isValidRecipe(item) {
-            const searchText = (item.title + ' ' + item.snippet).toLowerCase();
-            const recipeKeywords = ['recipe', 'ingredients', 'directions', 'instructions', 'cook', 'bake', 'preparation', 'servings'];
-            const hasKeyword = recipeKeywords.some(keyword => searchText.includes(keyword));
-            
-            // Avoid category pages
-            const categoryIndicators = ['category:', 'recipes by', 'browse recipes', 'search results'];
-            const isCategory = categoryIndicators.some(indicator => searchText.includes(indicator));
-
-            return hasKeyword && !isCategory;
         }
 
         function displayRecipes(recipes) {
-            recipesList.innerHTML = recipes.map(recipe => `
-                <div class="recipe-card">
-                    <div class="recipe-title">${escapeHtml(recipe.title)}</div>
-                    <div class="recipe-source">${escapeHtml(recipe.source)}</div>
-                    <div class="recipe-snippet">${escapeHtml(recipe.snippet)}</div>
-                    <div class="recipe-actions">
-                        <button class="btn-small btn-view" onclick="window.open('${escapeHtml(recipe.link)}', '_blank')">
-                            View Recipe
-                        </button>
-                        <button class="btn-small btn-copy" onclick="copyToClipboard(${escapeHtml(JSON.stringify(recipe))})">
-                            Save to Clipboard
-                        </button>
+            recipesList.innerHTML = recipes.map(recipe => {
+                // Get ingredient list
+                const ingredients = [];
+                for (let i = 1; i <= 20; i++) {
+                    const ingredient = recipe[`strIngredient${i}`];
+                    const measure = recipe[`strMeasure${i}`];
+                    if (ingredient && ingredient.trim()) {
+                        ingredients.push(`${measure} ${ingredient}`.trim());
+                    }
+                }
+
+                const snippet = recipe.strInstructions 
+                    ? recipe.strInstructions.substring(0, 150) + '...' 
+                    : 'Delicious recipe with detailed instructions.';
+
+                return `
+                    <div class="recipe-card">
+                        <img src="${recipe.strMealThumb}" alt="${escapeHtml(recipe.strMeal)}" class="recipe-image">
+                        <div class="recipe-title">${escapeHtml(recipe.strMeal)}</div>
+                        <div class="recipe-meta">
+                            ${recipe.strCategory ? `<span class="recipe-tag">${escapeHtml(recipe.strCategory)}</span>` : ''}
+                            ${recipe.strArea ? `<span class="recipe-tag cuisine">${escapeHtml(recipe.strArea)}</span>` : ''}
+                        </div>
+                        <div class="recipe-snippet">${escapeHtml(snippet)}</div>
+                        <div class="recipe-actions">
+                            <button class="btn-small btn-view" onclick="viewRecipe('${recipe.idMeal}')">
+                                View Recipe
+                            </button>
+                            <button class="btn-small btn-copy" onclick="copyToClipboard(${escapeHtml(JSON.stringify({
+                                title: recipe.strMeal,
+                                category: recipe.strCategory,
+                                cuisine: recipe.strArea,
+                                instructions: recipe.strInstructions,
+                                ingredients: ingredients,
+                                link: recipe.strSource || `https://www.themealdb.com/meal/${recipe.idMeal}`
+                            }))})">
+                                Save to Clipboard
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function viewRecipe(mealId) {
+            const recipe = allRecipes.find(r => r.idMeal === mealId);
+            if (recipe && recipe.strSource) {
+                window.open(recipe.strSource, '_blank');
+            } else {
+                window.open(`https://www.themealdb.com/meal/${mealId}`, '_blank');
+            }
         }
 
         function copyToClipboard(recipe) {
-            const text = `Recipe: ${recipe.title}\nSource: ${recipe.source}\nLink: ${recipe.link}\nSummary: ${recipe.snippet}`;
+            const ingredientsList = recipe.ingredients.join('\n- ');
+            const text = `${recipe.title}
+Category: ${recipe.category || 'N/A'}
+Cuisine: ${recipe.cuisine || 'N/A'}
+
+Ingredients:
+- ${ingredientsList}
+
+Instructions:
+${recipe.instructions}
+
+Link: ${recipe.link}`;
             
             navigator.clipboard.writeText(text).then(() => {
-                showToast('Copied to clipboard!');
+                showToast('Recipe copied to clipboard!');
             }).catch(() => {
                 showToast('Failed to copy to clipboard');
             });
