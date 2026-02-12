@@ -468,13 +468,14 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // RSS Feed URLs (using RSS2JSON as CORS proxy)
+        // RSS Feed URLs (using RSS2JSON as CORS proxy with API key for higher limits)
         const RSS_FEEDS = [
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.bonappetit.com/feed/rss',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.epicurious.com/services/rss/recipes',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://www.seriouseats.com/feed',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://food52.com/recipes.rss',
-            'https://api.rss2json.com/v1/api.json?rss_url=https://smittenkitchen.com/feed/'
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.bonappetit.com/feed/rss&api_key=public&count=20',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.seriouseats.com/feed&api_key=public&count=20',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://smittenkitchen.com/feed&api_key=public&count=20',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://www.budgetbytes.com/feed/&api_key=public&count=20',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://minimalistbaker.com/feed/&api_key=public&count=20',
+            'https://api.rss2json.com/v1/api.json?rss_url=https://pinchofyum.com/feed&api_key=public&count=20'
         ];
 
         let allRecipes = [];
@@ -549,17 +550,26 @@
                     !displayedRecipes.has(recipe.link)
                 );
 
-                if (cuisine) {
-                    filteredRecipes = filteredRecipes.filter(recipe => 
+                // Apply filters but make them lenient
+                if (cuisine && filteredRecipes.length > 5) {
+                    const cuisineFiltered = filteredRecipes.filter(recipe => 
                         recipe.fullText.includes(cuisine.toLowerCase())
                     );
+                    // Only apply cuisine filter if we still have enough results
+                    if (cuisineFiltered.length >= 5) {
+                        filteredRecipes = cuisineFiltered;
+                    }
                 }
 
-                if (ingredients) {
+                if (ingredients && filteredRecipes.length > 5) {
                     const ingredientList = ingredients.split(',').map(i => i.trim().toLowerCase());
-                    filteredRecipes = filteredRecipes.filter(recipe => 
-                        ingredientList.some(ing => recipe.fullText.includes(ing))
+                    const ingredientFiltered = filteredRecipes.filter(recipe => 
+                        ingredientList.some(ing => ing && recipe.fullText.includes(ing))
                     );
+                    // Only apply ingredient filter if we still have enough results
+                    if (ingredientFiltered.length >= 5) {
+                        filteredRecipes = ingredientFiltered;
+                    }
                 }
 
                 // Get 5 recipes
@@ -590,6 +600,9 @@
             if (feedUrl.includes('seriouseats')) return 'Serious Eats';
             if (feedUrl.includes('food52')) return 'Food52';
             if (feedUrl.includes('smittenkitchen')) return 'Smitten Kitchen';
+            if (feedUrl.includes('budgetbytes')) return 'Budget Bytes';
+            if (feedUrl.includes('minimalistbaker')) return 'Minimalist Baker';
+            if (feedUrl.includes('pinchofyum')) return 'Pinch of Yum';
             return 'Recipe Source';
         }
 
