@@ -494,8 +494,24 @@
             </div>
 
             <div class="form-group">
-                <label for="ingredient">Main Ingredient</label>
-                <input type="text" id="ingredient" placeholder="e.g., chicken, beef, pasta">
+                <label for="category">Category</label>
+                <select id="category">
+                    <option value="">Any</option>
+                    <option value="Beef">Beef</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Chicken">Chicken</option>
+                    <option value="Dessert">Dessert</option>
+                    <option value="Goat">Goat</option>
+                    <option value="Lamb">Lamb</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                    <option value="Pasta">Pasta</option>
+                    <option value="Pork">Pork</option>
+                    <option value="Seafood">Seafood</option>
+                    <option value="Side">Side</option>
+                    <option value="Starter">Starter</option>
+                    <option value="Vegan">Vegan</option>
+                    <option value="Vegetarian">Vegetarian</option>
+                </select>
             </div>
 
             <button type="submit" class="btn-primary" id="submitBtn">Find Recipes</button>
@@ -527,7 +543,7 @@
         let allRecipes = [];
         let displayedRecipeIds = new Set();
         let currentCuisine = '';
-        let currentIngredient = '';
+        let currentCategory = '';
 
         // DOM Elements
         const searchForm = document.getElementById('searchForm');
@@ -545,7 +561,7 @@
             e.preventDefault();
             
             currentCuisine = document.getElementById('cuisine').value;
-            currentIngredient = document.getElementById('ingredient').value.trim();
+            currentCategory = document.getElementById('category').value;
 
             // Reset displayed recipes for new search
             displayedRecipeIds.clear();
@@ -612,17 +628,37 @@
             let newRecipes = [];
 
             try {
-                // Search by cuisine if specified
-                if (currentCuisine) {
+                // Determine search strategy
+                const hasCuisine = currentCuisine !== '';
+                const hasCategory = currentCategory !== '';
+
+                // Search by cuisine AND category if both specified
+                if (hasCuisine && hasCategory) {
+                    // Get by cuisine first
+                    const response = await fetch(`${API_BASE}/filter.php?a=${currentCuisine}`);
+                    const data = await response.json();
+                    if (data.meals) {
+                        // Then filter by category client-side after getting full details
+                        const detailPromises = data.meals.slice(0, 20).map(recipe => 
+                            fetch(`${API_BASE}/lookup.php?i=${recipe.idMeal}`)
+                                .then(r => r.json())
+                                .then(d => d.meals[0])
+                        );
+                        const detailedRecipes = await Promise.all(detailPromises);
+                        newRecipes = detailedRecipes.filter(r => r.strCategory === currentCategory);
+                    }
+                }
+                // Search by cuisine only
+                else if (hasCuisine) {
                     const response = await fetch(`${API_BASE}/filter.php?a=${currentCuisine}`);
                     const data = await response.json();
                     if (data.meals) {
                         newRecipes = data.meals;
                     }
                 }
-                // Search by ingredient if specified
-                else if (currentIngredient) {
-                    const response = await fetch(`${API_BASE}/filter.php?i=${currentIngredient}`);
+                // Search by category only
+                else if (hasCategory) {
+                    const response = await fetch(`${API_BASE}/filter.php?c=${currentCategory}`);
                     const data = await response.json();
                     if (data.meals) {
                         newRecipes = data.meals;
@@ -642,18 +678,19 @@
                     throw new Error('No recipes found. Try different search criteria.');
                 }
 
-                // Fetch full details for each recipe
-                const detailPromises = newRecipes.map(recipe => 
-                    fetch(`${API_BASE}/lookup.php?i=${recipe.idMeal}`)
-                        .then(r => r.json())
-                        .then(data => data.meals[0])
-                );
-
-                const detailedRecipes = await Promise.all(detailPromises);
+                // Fetch full details for each recipe (skip if already detailed from cuisine+category search)
+                if (!(hasCuisine && hasCategory)) {
+                    const detailPromises = newRecipes.map(recipe => 
+                        fetch(`${API_BASE}/lookup.php?i=${recipe.idMeal}`)
+                            .then(r => r.json())
+                            .then(data => data.meals[0])
+                    );
+                    newRecipes = await Promise.all(detailPromises);
+                }
                 
                 // Add to our collection (avoiding duplicates)
-                detailedRecipes.forEach(recipe => {
-                    if (!allRecipes.find(r => r.idMeal === recipe.idMeal)) {
+                newRecipes.forEach(recipe => {
+                    if (recipe && !allRecipes.find(r => r.idMeal === recipe.idMeal)) {
                         allRecipes.push(recipe);
                     }
                 });
