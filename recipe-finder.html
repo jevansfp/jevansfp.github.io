@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Finder</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍳</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍳</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -170,29 +172,6 @@
             cursor: not-allowed;
         }
 
-        .btn-secondary {
-            width: 100%;
-            padding: 14px 24px;
-            background: white;
-            color: var(--forest);
-            border: 2px solid var(--sage);
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'DM Sans', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-        }
-
-        .btn-secondary:hover {
-            background: var(--sage);
-            color: white;
-            transform: translateY(-1px);
-        }
-
         .results-container {
             display: none;
             animation: fadeIn 0.5s ease-out;
@@ -296,17 +275,6 @@
 
         .btn-view:hover {
             background: var(--sage);
-            transform: scale(1.02);
-        }
-
-        .btn-copy {
-            background: var(--butter);
-            color: var(--charcoal);
-        }
-
-        .btn-copy:hover {
-            background: var(--clay);
-            color: white;
             transform: scale(1.02);
         }
 
@@ -528,7 +496,6 @@
         </div>
 
         <div id="resultsContainer" class="results-container">
-            <button id="generateNewBtn" class="btn-secondary">Generate a New 5 Recipes</button>
             <div id="recipesList"></div>
         </div>
     </div>
@@ -548,7 +515,6 @@
         // DOM Elements
         const searchForm = document.getElementById('searchForm');
         const submitBtn = document.getElementById('submitBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
         const loading = document.getElementById('loading');
         const resultsContainer = document.getElementById('resultsContainer');
         const recipesList = document.getElementById('recipesList');
@@ -570,17 +536,11 @@
             await performSearch();
         });
 
-        // Generate new recipes
-        generateNewBtn.addEventListener('click', async () => {
-            await performSearch(true);
-        });
-
         async function performSearch(isRegenerate = false) {
             hideError();
             loading.classList.add('visible');
             resultsContainer.classList.remove('visible');
             submitBtn.disabled = true;
-            generateNewBtn.disabled = true;
 
             try {
                 // Fetch recipes if we don't have enough
@@ -600,7 +560,6 @@
                         showError('No more recipes found. Try different search criteria or clear your search to start over.');
                         loading.classList.remove('visible');
                         submitBtn.disabled = false;
-                        generateNewBtn.disabled = false;
                         return;
                     }
                 }
@@ -620,7 +579,6 @@
             } finally {
                 loading.classList.remove('visible');
                 submitBtn.disabled = false;
-                generateNewBtn.disabled = false;
             }
         }
 
@@ -729,18 +687,8 @@
                         </div>
                         <div class="recipe-snippet">${escapeHtml(snippet)}</div>
                         <div class="recipe-actions">
-                            <button class="btn-small btn-view" onclick="viewRecipe('${recipe.idMeal}')">
+                            <button class="btn-small btn-view" onclick="viewRecipe('${recipe.idMeal}')" style="width: 100%;">
                                 View Recipe
-                            </button>
-                            <button class="btn-small btn-copy" onclick="copyToClipboard(${escapeHtml(JSON.stringify({
-                                title: recipe.strMeal,
-                                category: recipe.strCategory,
-                                cuisine: recipe.strArea,
-                                instructions: recipe.strInstructions,
-                                ingredients: ingredients,
-                                link: recipe.strSource || `https://www.themealdb.com/meal/${recipe.idMeal}`
-                            }))})">
-                                Save to Clipboard
                             </button>
                         </div>
                     </div>
@@ -755,27 +703,6 @@
             } else {
                 window.open(`https://www.themealdb.com/meal/${mealId}`, '_blank');
             }
-        }
-
-        function copyToClipboard(recipe) {
-            const ingredientsList = recipe.ingredients.join('\n- ');
-            const text = `${recipe.title}
-Category: ${recipe.category || 'N/A'}
-Cuisine: ${recipe.cuisine || 'N/A'}
-
-Ingredients:
-- ${ingredientsList}
-
-Instructions:
-${recipe.instructions}
-
-Link: ${recipe.link}`;
-            
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('Recipe copied to clipboard!');
-            }).catch(() => {
-                showToast('Failed to copy to clipboard');
-            });
         }
 
         function showToast(message) {
