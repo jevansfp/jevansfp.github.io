@@ -281,8 +281,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="pillCount">Number of Pills in Batch</label>
-                    <input type="number" id="pillCount" required min="1" placeholder="e.g., 90">
+                    <label for="daysSupply">Days Supply in Batch</label>
+                    <input type="number" id="daysSupply" required min="1" placeholder="e.g., 30 or 90">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Add Medication</button>
@@ -342,7 +342,7 @@
                 id: Date.now(),
                 name: document.getElementById('medName').value,
                 lastPickup: document.getElementById('lastPickup').value,
-                pillCount: parseInt(document.getElementById('pillCount').value)
+                daysSupply: parseInt(document.getElementById('daysSupply').value)
             };
 
             medications.push(medication);
@@ -375,36 +375,40 @@
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
-            // Calculate pills per day (assuming taken daily)
-            const pillsPerDay = 1; // Could be made configurable
-            
-            // Date last filled
-            const lastFilledDate = new Date(dispenserInfo.lastFilled);
-            
-            // Next refill date (when dispenser runs out)
-            const nextRefillDate = new Date(lastFilledDate);
-            nextRefillDate.setDate(nextRefillDate.getDate() + dispenserInfo.daysFilled);
             
             // Date pharmacy pickup received
             const lastPickupDate = new Date(med.lastPickup);
+            lastPickupDate.setHours(0, 0, 0, 0);
             
-            // Calculate when pills will run out
-            const pillsRemaining = med.pillCount - (getDaysBetween(lastFilledDate, today) * pillsPerDay);
-            const daysUntilPharmacyNeeded = Math.floor(pillsRemaining / pillsPerDay);
-            const nextPharmacyDate = new Date(today);
-            nextPharmacyDate.setDate(nextPharmacyDate.getDate() + daysUntilPharmacyNeeded);
+            // Calculate next pharmacy pickup date
+            // This medication runs out after daysSupply from the pickup date
+            const nextPharmacyDate = new Date(lastPickupDate);
+            nextPharmacyDate.setDate(nextPharmacyDate.getDate() + med.daysSupply);
             
-            // Days until each event
-            const daysUntilRefill = getDaysBetween(today, nextRefillDate);
+            // Days until pharmacy pickup needed
             const daysUntilPharmacy = getDaysBetween(today, nextPharmacyDate);
+            
+            // Days supply remaining from this batch
+            const daysUsed = getDaysBetween(lastPickupDate, today);
+            const daysRemaining = Math.max(0, med.daysSupply - daysUsed);
+            
+            // Date last filled dispenser
+            const lastFilledDate = new Date(dispenserInfo.lastFilled);
+            lastFilledDate.setHours(0, 0, 0, 0);
+            
+            // Next dispenser refill date (same for all meds)
+            const nextRefillDate = new Date(lastFilledDate);
+            nextRefillDate.setDate(nextRefillDate.getDate() + dispenserInfo.daysFilled);
+            
+            // Days until dispenser refill
+            const daysUntilRefill = getDaysBetween(today, nextRefillDate);
 
             return {
                 nextRefillDate,
                 nextPharmacyDate,
                 daysUntilRefill,
                 daysUntilPharmacy,
-                pillsRemaining: Math.max(0, pillsRemaining)
+                daysRemaining
             };
         }
 
@@ -454,8 +458,8 @@
                                     <span class="med-detail-value">${formatDate(med.lastPickup)}</span>
                                 </div>
                                 <div class="med-detail">
-                                    <span class="med-detail-label">Pills in Batch</span>
-                                    <span class="med-detail-value">${med.pillCount} pills</span>
+                                    <span class="med-detail-label">Days Supply in Batch</span>
+                                    <span class="med-detail-value">${med.daysSupply} days</span>
                                 </div>
                             </div>
                         </div>
@@ -506,12 +510,12 @@
                                 <span class="med-detail-value">${formatDate(med.lastPickup)}</span>
                             </div>
                             <div class="med-detail">
-                                <span class="med-detail-label">Pills in Batch</span>
-                                <span class="med-detail-value">${med.pillCount} pills</span>
+                                <span class="med-detail-label">Days Supply in Batch</span>
+                                <span class="med-detail-value">${med.daysSupply} days</span>
                             </div>
                             <div class="med-detail">
-                                <span class="med-detail-label">Pills Remaining</span>
-                                <span class="med-detail-value">${dates.pillsRemaining} pills</span>
+                                <span class="med-detail-label">Days Remaining</span>
+                                <span class="med-detail-value">${dates.daysRemaining} days</span>
                             </div>
                             <div class="med-detail">
                                 <span class="med-detail-label">Last Dispenser Fill</span>
