@@ -1,660 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Curling Game</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥌</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥌</text></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-user-select: none;
-            user-select: none;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Mini Curling (Mobile)</title>
+  <style>
+    :root {
+      --bg: #0b1320;
+      --ice: #dfe8f2;
+      --rink: #c9d7e6;
+      --line: rgba(20, 35, 55, 0.35);
+      --text: #eef4ff;
+      --ui: rgba(10, 18, 30, 0.75);
+      --accent: #76c7ff;
+      --red: #ff4d5a;
+      --yellow: #ffd24a;
+    }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
-            color: white;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 700px at 50% 30%, #13223a, var(--bg));
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      overscroll-behavior: none;
+      touch-action: none; /* important for drag aiming */
+    }
 
-        #gameContainer {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-        }
+    .wrap {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
 
-        #header {
-            padding: 12px 20px;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-        }
+    header {
+      padding: 10px 12px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
 
-        .title {
-            font-family: 'Bangers', cursive;
-            font-size: 28px;
-            letter-spacing: 2px;
-            color: #60a5fa;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
+    header .title {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      font-size: 15px;
+      opacity: 0.95;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .score {
-            font-size: 18px;
-            font-weight: 700;
-        }
+    header .title .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(118,199,255,0.6);
+    }
 
-        .score-team {
-            display: inline-block;
-            margin: 0 8px;
-        }
+    header .meta {
+      font-size: 13px;
+      opacity: 0.9;
+      text-align: right;
+      line-height: 1.25;
+    }
 
-        .red { color: #ef4444; }
-        .blue { color: #3b82f6; }
+    .canvasWrap {
+      position: relative;
+      padding: 0 10px 10px;
+    }
 
-        #iceSheet {
-            flex: 1;
-            position: relative;
-            background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%);
-            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
+    canvas {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, var(--ice), var(--rink));
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      display: block;
+    }
 
-        .centerline {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: rgba(59, 130, 246, 0.3);
-            transform: translateX(-50%);
-        }
+    .hud {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 10px 12px;
+      background: var(--ui);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 13px;
+      line-height: 1.25;
+      max-width: 260px;
+      pointer-events: none;
+    }
 
-        .hogline {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: rgba(239, 68, 68, 0.4);
-        }
+    .hud b { color: var(--accent); }
 
-        .hogline-near {
-            top: 25%;
-        }
+    footer {
+      padding: 10px 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
 
-        .hogline-far {
-            top: 15%;
-        }
+    .panel {
+      background: var(--ui);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
 
-        .house {
-            position: absolute;
-            top: 8%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140px;
-            height: 140px;
-        }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+      opacity: 0.95;
+    }
 
-        .house-circle {
-            position: absolute;
-            border-radius: 50%;
-            border: 3px solid;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+    .row .value {
+      font-variant-numeric: tabular-nums;
+      opacity: 0.95;
+    }
 
-        .circle-blue { 
-            width: 140px; 
-            height: 140px; 
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-        }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
 
-        .circle-white { 
-            width: 100px; 
-            height: 100px; 
-            border-color: white;
-            background: rgba(255, 255, 255, 0.2);
-        }
+    .btnRow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
 
-        .circle-red { 
-            width: 60px; 
-            height: 60px; 
-            border-color: #ef4444;
-            background: rgba(239, 68, 68, 0.1);
-        }
+    button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 10px;
+      border-radius: 12px;
+      font-weight: 650;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        .button-circle {
-            width: 12px;
-            height: 12px;
-            background: #fbbf24;
-            border: 2px solid #f59e0b;
-        }
+    button:active {
+      transform: translateY(1px);
+      background: rgba(255,255,255,0.10);
+    }
 
-        .stone {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 14px;
-            cursor: grab;
-            transition: transform 0.1s;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
+    .sweepActive {
+      border-color: rgba(118,199,255,0.65);
+      box-shadow: 0 0 0 2px rgba(118,199,255,0.15) inset;
+    }
 
-        .stone:active {
-            cursor: grabbing;
-        }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.18);
+      font-size: 12px;
+      opacity: 0.95;
+    }
+    .chip {
+      width: 10px; height: 10px; border-radius: 50%;
+      display: inline-block;
+    }
+    .chip.red { background: var(--red); }
+    .chip.yellow { background: var(--yellow); }
 
-        .stone.red-stone {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border-color: #991b1b;
-            color: white;
-        }
-
-        .stone.blue-stone {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            border-color: #1e40af;
-            color: white;
-        }
-
-        .stone.active {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
-        }
-
-        #controls {
-            padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-        }
-
-        .control-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-            align-items: center;
-        }
-
-        .slider-container {
-            flex: 1;
-        }
-
-        .slider-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #60a5fa;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: 3px solid white;
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: 3px solid white;
-        }
-
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 900;
-            font-family: 'Bangers', cursive;
-            font-size: 18px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-throw {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-reset {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .value-display {
-            font-size: 14px;
-            font-weight: 700;
-            color: #fbbf24;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        #message {
-            text-align: center;
-            padding: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .end-info {
-            display: flex;
-            justify-content: space-around;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.4);
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        @keyframes stoneFly {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: scale(0.95); }
-            100% { transform: translate(var(--tx), var(--ty)) scale(1); }
-        }
-
-        .flying {
-            animation: stoneFly 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        @media (max-width: 600px) {
-            .title {
-                font-size: 24px;
-            }
-
-            .score {
-                font-size: 16px;
-            }
-
-            .btn {
-                padding: 12px 20px;
-                font-size: 16px;
-            }
-
-            .house {
-                width: 120px;
-                height: 120px;
-            }
-
-            .circle-blue { width: 120px; height: 120px; }
-            .circle-white { width: 85px; height: 85px; }
-            .circle-red { width: 50px; height: 50px; }
-
-            .stone {
-                width: 36px;
-                height: 36px;
-            }
-        }
-    </style>
+    @media (max-width: 520px) {
+      footer { grid-template-columns: 1fr; }
+      .hud { max-width: 80vw; }
+    }
+  </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="header">
-            <div class="title">🥌 Curling</div>
-            <div class="score">
-                <span class="score-team red">Red: <span id="redScore">0</span></span>
-                <span class="score-team blue">Blue: <span id="blueScore">0</span></span>
-            </div>
-        </div>
-
-        <div class="end-info">
-            <div>End: <span id="currentEnd">1</span>/10</div>
-            <div>Throw: <span id="currentThrow">1</span>/16</div>
-            <div>Team: <span id="currentTeam" class="red">Red</span></div>
-        </div>
-
-        <div id="iceSheet">
-            <div class="centerline"></div>
-            <div class="hogline hogline-far"></div>
-            <div class="hogline hogline-near"></div>
-            
-            <div class="house">
-                <div class="house-circle circle-blue"></div>
-                <div class="house-circle circle-white"></div>
-                <div class="house-circle circle-red"></div>
-                <div class="house-circle button-circle"></div>
-            </div>
-
-            <div id="stones"></div>
-        </div>
-
-        <div id="message">Welcome to Curling! Adjust power and angle, then throw!</div>
-
-        <div id="controls">
-            <div class="control-row">
-                <div class="slider-container">
-                    <div class="slider-label">Power</div>
-                    <input type="range" id="powerSlider" min="30" max="100" value="70">
-                </div>
-                <div class="value-display" id="powerValue">70%</div>
-            </div>
-
-            <div class="control-row">
-                <div class="slider-container">
-                    <div class="slider-label">Angle</div>
-                    <input type="range" id="angleSlider" min="-30" max="30" value="0">
-                </div>
-                <div class="value-display" id="angleValue">0°</div>
-            </div>
-
-            <div class="control-row">
-                <button class="btn btn-throw" id="throwBtn">Throw Stone</button>
-                <button class="btn btn-reset" id="resetBtn">New Game</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const iceSheet = document.getElementById('iceSheet');
-        const stonesContainer = document.getElementById('stones');
-        const powerSlider = document.getElementById('powerSlider');
-        const angleSlider = document.getElementById('angleSlider');
-        const powerValue = document.getElementById('powerValue');
-        const angleValue = document.getElementById('angleValue');
-        const throwBtn = document.getElementById('throwBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const message = document.getElementById('message');
-        const redScoreEl = document.getElementById('redScore');
-        const blueScoreEl = document.getElementById('blueScore');
-        const currentEndEl = document.getElementById('currentEnd');
-        const currentThrowEl = document.getElementById('currentThrow');
-        const currentTeamEl = document.getElementById('currentTeam');
-
-        let gameState = {
-            redScore: 0,
-            blueScore: 0,
-            currentEnd: 1,
-            throwNumber: 1,
-            currentTeam: 'red',
-            stones: []
-        };
-
-        // Update slider displays
-        powerSlider.addEventListener('input', () => {
-            powerValue.textContent = powerSlider.value + '%';
-        });
-
-        angleSlider.addEventListener('input', () => {
-            angleValue.textContent = angleSlider.value + '°';
-        });
-
-        // Throw stone
-        throwBtn.addEventListener('click', throwStone);
-        resetBtn.addEventListener('click', resetGame);
-
-        function throwStone() {
-            const power = parseInt(powerSlider.value);
-            const angle = parseInt(angleSlider.value);
-
-            // Calculate stone destination
-            const iceRect = iceSheet.getBoundingClientRect();
-            const houseY = iceRect.height * 0.08; // House is at 8% from top
-            const centerX = iceRect.width / 2;
-
-            // Power determines how far stone goes (with randomness)
-            const powerFactor = power / 100;
-            const randomness = (Math.random() - 0.5) * 20; // Add some unpredictability
-            const targetY = houseY + (1 - powerFactor) * 150 + randomness;
-
-            // Angle determines horizontal position
-            const angleFactor = angle / 30; // -1 to 1
-            const targetX = centerX + (angleFactor * iceRect.width * 0.3) + (Math.random() - 0.5) * 30;
-
-            // Create stone
-            const stone = document.createElement('div');
-            stone.className = `stone ${gameState.currentTeam}-stone`;
-            stone.textContent = gameState.throwNumber;
-            
-            // Start position (bottom center)
-            const startX = centerX - 20; // 20 is half stone width
-            const startY = iceRect.height - 60;
-            
-            stone.style.left = startX + 'px';
-            stone.style.top = startY + 'px';
-            
-            stonesContainer.appendChild(stone);
-
-            // Animate stone
-            setTimeout(() => {
-                stone.style.setProperty('--tx', (targetX - startX - 20) + 'px');
-                stone.style.setProperty('--ty', (targetY - startY) + 'px');
-                stone.classList.add('flying');
-
-                setTimeout(() => {
-                    stone.style.left = (targetX - 20) + 'px';
-                    stone.style.top = targetY + 'px';
-                    stone.classList.remove('flying');
-
-                    // Store stone position
-                    gameState.stones.push({
-                        team: gameState.currentTeam,
-                        x: targetX - 20,
-                        y: targetY,
-                        element: stone
-                    });
-
-                    checkCollisions();
-                    nextThrow();
-                }, 1500);
-            }, 100);
-        }
-
-        function checkCollisions() {
-            const stones = gameState.stones;
-            const collisionDistance = 40; // Stone diameter
-
-            // Simple collision detection
-            for (let i = 0; i < stones.length; i++) {
-                for (let j = i + 1; j < stones.length; j++) {
-                    const dx = stones[i].x - stones[j].x;
-                    const dy = stones[i].y - stones[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < collisionDistance) {
-                        // Push stones apart slightly
-                        const angle = Math.atan2(dy, dx);
-                        const pushDistance = (collisionDistance - distance) / 2;
-                        
-                        stones[i].x += Math.cos(angle) * pushDistance;
-                        stones[i].y += Math.sin(angle) * pushDistance;
-                        stones[j].x -= Math.cos(angle) * pushDistance;
-                        stones[j].y -= Math.sin(angle) * pushDistance;
-
-                        stones[i].element.style.left = stones[i].x + 'px';
-                        stones[i].element.style.top = stones[i].y + 'px';
-                        stones[j].element.style.left = stones[j].x + 'px';
-                        stones[j].element.style.top = stones[j].y + 'px';
-                    }
-                }
-            }
-        }
-
-        function nextThrow() {
-            gameState.throwNumber++;
-
-            if (gameState.throwNumber > 16) {
-                endRound();
-                return;
-            }
-
-            // Alternate teams
-            gameState.currentTeam = gameState.currentTeam === 'red' ? 'blue' : 'red';
-
-            updateDisplay();
-            message.textContent = `${gameState.currentTeam === 'red' ? 'Red' : 'Blue'} team's turn!`;
-        }
-
-        function endRound() {
-            // Calculate score - find closest stone to center
-            const iceRect = iceSheet.getBoundingClientRect();
-            const centerX = iceRect.width / 2;
-            const centerY = iceRect.height * 0.08 + 70; // House center
-
-            let closestDistance = Infinity;
-            let winningTeam = null;
-            let points = 0;
-
-            gameState.stones.forEach(stone => {
-                const dx = (stone.x + 20) - centerX;
-                const dy = (stone.y + 20) - centerY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < 70 && distance < closestDistance) { // Within house radius
-                    closestDistance = distance;
-                    winningTeam = stone.team;
-                }
-            });
-
-            // Count points for winning team (stones closer than opponent's closest)
-            if (winningTeam) {
-                gameState.stones.forEach(stone => {
-                    if (stone.team === winningTeam) {
-                        const dx = (stone.x + 20) - centerX;
-                        const dy = (stone.y + 20) - centerY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 70) {
-                            // Check if this stone is closer than any opponent stone
-                            let isScoring = true;
-                            gameState.stones.forEach(oppStone => {
-                                if (oppStone.team !== winningTeam) {
-                                    const odx = (oppStone.x + 20) - centerX;
-                                    const ody = (oppStone.y + 20) - centerY;
-                                    const oppDistance = Math.sqrt(odx * odx + ody * ody);
-                                    if (oppDistance < distance) {
-                                        isScoring = false;
-                                    }
-                                }
-                            });
-                            if (isScoring) points++;
-                        }
-                    }
-                });
-
-                if (winningTeam === 'red') {
-                    gameState.redScore += points;
-                } else {
-                    gameState.blueScore += points;
-                }
-
-                message.textContent = `End ${gameState.currentEnd}: ${winningTeam === 'red' ? 'Red' : 'Blue'} scores ${points} point(s)!`;
-            } else {
-                message.textContent = `End ${gameState.currentEnd}: No points scored!`;
-            }
-
-            // Next end or game over
-            gameState.currentEnd++;
-            if (gameState.currentEnd > 10) {
-                endGame();
-                return;
-            }
-
-            setTimeout(() => {
-                startNewEnd();
-            }, 3000);
-        }
-
-        function startNewEnd() {
-            // Clear stones
-            stonesContainer.innerHTML = '';
-            gameState.stones = [];
-            gameState.throwNumber = 1;
-            gameState.currentTeam = 'red';
-
-            updateDisplay();
-            message.textContent = `End ${gameState.currentEnd} - Red team starts!`;
-        }
-
-        function endGame() {
-            const winner = gameState.redScore > gameState.blueScore ? 'Red' : 
-                          gameState.blueScore > gameState.redScore ? 'Blue' : 'Tie';
-            
-            message.textContent = winner === 'Tie' ? 
-                `Game Over! It's a tie ${gameState.redScore}-${gameState.blueScore}!` :
-                `Game Over! ${winner} wins ${Math.max(gameState.redScore, gameState.blueScore)}-${Math.min(gameState.redScore, gameState.blueScore)}!`;
-            
-            throwBtn.disabled = true;
-        }
-
-        function resetGame() {
-            gameState = {
-                redScore: 0,
-                blueScore: 0,
-                currentEnd: 1,
-                throwNumber: 1,
-                currentTeam: 'red',
-                stones: []
-            };
-
-            stonesContainer.innerHTML = '';
-            throwBtn.disabled = false;
-            updateDisplay();
-            message.textContent = 'New game started! Red team begins.';
-        }
-
-        function updateDisplay() {
-            redScoreEl.textContent = gameState.redScore;
-            blueScoreEl.textContent = gameState.blueScore;
-            currentEndEl.textContent = gameState.currentEnd;
-            currentThrowEl.textContent = gameState.throwNumber;
-            currentTeamEl.textContent = gameState.currentTeam === 'red' ? 'Red' : 'Blue';
-            currentTeamEl.className = gameState.currentTeam;
-        }
-
-        // Initialize
-        updateDisplay();
-    </script>
-</body>
-</html>
+  <div class="wrap">
+    <header>
+      <div class="title"><span class="dot"></span> Mini Curling</div>
+      <div class="meta" id="meta"></div>
