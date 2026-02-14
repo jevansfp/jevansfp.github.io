@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marvel United Mission Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦸</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦸</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #ED1D24;
+            --blue: #1D4E89;
+            --yellow: #FFD700;
+            --black: #1a1a1a;
+            --white: #FFFFFF;
+            --gray: #E5E5E5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--red) 0%, #8B0000 100%);
+            color: var(--white);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.03) 2px,
+                    rgba(0,0,0,0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        h1 {
+            font-family: 'Bangers', cursive;
+            font-size: 48px;
+            color: var(--yellow);
+            text-shadow: 
+                3px 3px 0 var(--black),
+                -1px -1px 0 var(--black),
+                1px -1px 0 var(--black),
+                -1px 1px 0 var(--black),
+                1px 1px 0 var(--black);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--yellow);
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .setup-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 24px;
+            animation: slideUp 0.6s ease-out 0.2s both;
+            border: 4px solid var(--black);
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--blue);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .player-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .player-btn {
+            padding: 16px;
+            border: 3px solid var(--blue);
+            background: white;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 900;
+            font-family: 'Bangers', cursive;
+            color: var(--blue);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .player-btn:hover {
+            background: var(--blue);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .player-btn.selected {
+            background: var(--red);
+            border-color: var(--red);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, var(--red) 0%, #8B0000 100%);
+            color: white;
+            border: 4px solid var(--black);
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 900;
+            font-family: 'Bangers', cursive;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 0 var(--black);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 var(--black);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--black);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.visible {
+            display: block;
+        }
+
+        .mission-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 4px solid var(--black);
+            animation: cardPop 0.5s ease-out;
+        }
+
+        .section-title {
+            font-family: 'Bangers', cursive;
+            font-size: 28px;
+            color: var(--red);
+            margin-bottom: 16px;
+            text-shadow: 2px 2px 0 var(--yellow);
+        }
+
+        .heroes-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge {
+            background: linear-gradient(135deg, var(--blue) 0%, #0D2A47 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid var(--black);
+            box-shadow: 2px 2px 0 var(--black);
+        }
+
+        .villain-badge {
+            background: linear-gradient(135deg, var(--red) 0%, #5C0000 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-weight: 900;
+            font-size: 20px;
+            font-family: 'Bangers', cursive;
+            display: inline-block;
+            margin-bottom: 24px;
+            border: 3px solid var(--black);
+            box-shadow: 3px 3px 0 var(--black);
+            letter-spacing: 1px;
+        }
+
+        .story-text {
+            color: var(--black);
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 400;
+            background: var(--gray);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid var(--black);
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 6px solid var(--yellow);
+            border-top-color: var(--red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-family: 'Bangers', cursive;
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 0 var(--black);
+        }
+
+        .error {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 4px solid #D64545;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+            animation: shake 0.5s ease-out;
+        }
+
+        .error-title {
+            font-weight: 900;
+            color: #D64545;
+            margin-bottom: 8px;
+            font-size: 18px;
+            font-family: 'Bangers', cursive;
+        }
+
+        .error-message {
+            color: var(--black);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, var(--blue) 0%, #0D2A47 100%);
+            margin-bottom: 20px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes cardPop {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .setup-card {
+                padding: 24px 20px;
+            }
+
+            .player-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Marvel United</h1>
+            <div class="subtitle">Mission Generator</div>
+        </header>
+
+        <div class="setup-card">
+            <div class="form-group">
+                <label>Select Number of Players</label>
+                <div class="player-buttons">
+                    <button class="player-btn" data-players="1">1</button>
+                    <button class="player-btn" data-players="2">2</button>
+                    <button class="player-btn" data-players="3">3</button>
+                    <button class="player-btn" data-players="4">4</button>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="generateBtn" disabled>Generate Mission</button>
+        </div>
+
+        <div id="errorDisplay" class="error">
+            <div class="error-title">Error!</div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Assembling Heroes...</div>
+        </div>
+
+        <div id="results" class="results">
+            <button class="btn-primary btn-new" id="newMissionBtn">Generate New Mission</button>
+            
+            <div class="mission-card">
+                <div class="section-title">Your Heroes</div>
+                <div class="heroes-list" id="heroesList"></div>
+
+                <div class="section-title">Villain</div>
+                <div class="villain-badge" id="villainName"></div>
+
+                <div class="section-title">Mission Briefing</div>
+                <div class="story-text" id="storyText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Marvel United Characters Database
+        const HEROES = [
+            // Core Box
+            "Iron Man", "Captain America", "Captain Marvel", "Spider-Man", "Black Widow", "Hulk",
+            
+            // Core Box Stretch Goals
+            "Ant-Man", "Wasp",
+            
+            // Tales of Asgard
+            "Thor", "Loki", "Valkyrie", "Hela", "Sif",
+            
+            // Rise of the Black Panther
+            "Black Panther", "Shuri", "Okoye", "Killmonger",
+            
+            // Enter the Spider-Verse
+            "Miles Morales", "Spider-Gwen", "Spider-Ham", "Venom",
+            
+            // X-Men
+            "Wolverine", "Cyclops", "Storm", "Jean Grey", "Colossus", "Rogue", "Gambit", "Beast", "Nightcrawler", "Jubilee", "Iceman", "Angel",
+            
+            // Guardians of the Galaxy
+            "Star-Lord", "Gamora", "Drax", "Rocket Raccoon", "Groot",
+            
+            // Sinister Six
+            "Mysterio (Hero)", "Vulture (Hero)",
+            
+            // Deadpool
+            "Deadpool",
+            
+            // Kickstarter Exclusives
+            "War Machine", "Winter Soldier", "Thanos (Hero)", "Vision", "Scarlet Witch", "Quicksilver",
+            
+            // Blue Marvel
+            "Blue Marvel",
+            
+            // Infinity Gauntlet
+            "Doctor Strange", "Adam Warlock",
+            
+            // Multiverse
+            "She-Hulk", "Moon Knight", "Daredevil", "Luke Cage", "Jessica Jones", "Iron Fist", "Punisher",
+            
+            // Spider-Verse Expansion
+            "Spider-Man 2099", "Spider-Man Noir", "Peni Parker",
+            
+            // Fantastic Four
+            "Mister Fantastic", "Invisible Woman", "Human Torch", "The Thing",
+            
+            // Other Expansions
+            "Hawkeye", "Black Cat", "Squirrel Girl", "Ms. Marvel", "America Chavez", "Echo"
+        ];
+
+        const VILLAINS = [
+            // Core Box
+            "Red Skull", "Ultron", "Taskmaster",
+            
+            // Tales of Asgard
+            "Hela", "Loki",
+            
+            // Rise of the Black Panther
+            "Killmonger",
+            
+            // Enter the Spider-Verse
+            "Green Goblin", "Venom",
+            
+            // X-Men
+            "Magneto", "Mystique", "Sabretooth", "Juggernaut", "Sentinels", "Dark Phoenix",
+            
+            // Sinister Six
+            "Doctor Octopus", "Vulture", "Mysterio", "Electro", "Sandman", "Kraven",
+            
+            // Guardians of the Galaxy
+            "Ronan", "Nebula",
+            
+            // Deadpool
+            "Deadpool (Villain)",
+            
+            // Kickstarter Exclusives
+            "Thanos", "Corvus Glaive",
+            
+            // Infinity Gauntlet
+            "Ebony Maw",
+            
+            // Multiverse
+            "Kingpin", "Bullseye", "Purple Man",
+            
+            // Fantastic Four
+            "Doctor Doom", "Super-Skrull", "Galactus"
+        ];
+
+        // State
+        let selectedPlayers = 0;
+        let currentMission = null;
+
+        // DOM Elements
+        const playerButtons = document.querySelectorAll('.player-btn');
+        const generateBtn = document.getElementById('generateBtn');
+        const newMissionBtn = document.getElementById('newMissionBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const errorMessage = document.getElementById('errorMessage');
+        const heroesList = document.getElementById('heroesList');
+        const villainName = document.getElementById('villainName');
+        const storyText = document.getElementById('storyText');
+
+        // Player selection
+        playerButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                playerButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedPlayers = parseInt(btn.dataset.players);
+                generateBtn.disabled = false;
+            });
+        });
+
+        // Generate mission
+        generateBtn.addEventListener('click', () => generateMission());
+        newMissionBtn.addEventListener('click', () => generateMission());
+
+        async function generateMission() {
+            hideError();
+            loading.classList.add('visible');
+            results.classList.remove('visible');
+            generateBtn.disabled = true;
+
+            try {
+                // Select random heroes
+                const heroes = selectRandomHeroes(selectedPlayers);
+                
+                // Select random villain
+                const villain = selectRandomVillain();
+
+                // Generate story with Claude AI
+                const story = await generateStory(heroes, villain);
+
+                // Display results
+                currentMission = { heroes, villain, story };
+                displayMission();
+                
+                results.classList.add('visible');
+
+            } catch (error) {
+                showError(error.message);
+                generateBtn.disabled = false;
+            } finally {
+                loading.classList.remove('visible');
+            }
+        }
+
+        function selectRandomHeroes(count) {
+            const shuffled = [...HEROES].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        }
+
+        function selectRandomVillain() {
+            return VILLAINS[Math.floor(Math.random() * VILLAINS.length)];
+        }
+
+        async function generateStory(heroes, villain) {
+            try {
+                const heroList = heroes.join(', ').replace(/, ([^,]*)$/, ', and $1');
+                
+                console.log('Generating story for:', heroList, 'vs', villain);
+                
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1000,
+                        messages: [{
+                            role: 'user',
+                            content: `Write an exciting 3-4 sentence mission briefing for a Marvel United board game session. The heroes are: ${heroList}. The villain they're facing is: ${villain}. Make it dramatic and comic-book style, describing the threat and why these specific heroes must unite. Don't use any formatting, headers, or labels - just the story paragraph.`
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('API response not OK:', response.status);
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                console.log('API response:', data);
+                
+                const storyContent = data.content
+                    .filter(item => item.type === 'text')
+                    .map(item => item.text)
+                    .join('\n');
+
+                return storyContent.trim();
+
+            } catch (error) {
+                console.error('Story generation error:', error);
+                // Fallback to template-based story
+                return generateFallbackStory(heroes, villain);
+            }
+        }
+
+        function generateFallbackStory(heroes, villain) {
+            const heroList = heroes.join(', ').replace(/, ([^,]*)$/, ', and $1');
+            
+            const templates = [
+                `${villain} has launched a devastating attack on New York City! ${heroList} must unite to stop this threat before it's too late. The fate of the city hangs in the balance as our heroes assemble for their greatest battle yet!`,
+                
+                `A sinister plot by ${villain} threatens the entire world! Only ${heroList} can stand against this menace. Time is running out as our heroes race to save the day!`,
+                
+                `${villain} has seized a powerful artifact that could reshape reality itself! ${heroList} must work together to prevent catastrophe. The clock is ticking and failure is not an option!`,
+                
+                `The forces of ${villain} are overwhelming the city's defenses! ${heroList} answer the call to action, ready to fight as one. This will be their greatest challenge yet!`,
+                
+                `${villain}'s master plan is finally revealed, and it's more dangerous than anyone imagined! ${heroList} must combine their unique abilities to overcome this impossible threat. Victory will require perfect teamwork!`
+            ];
+            
+            return templates[Math.floor(Math.random() * templates.length)];
+        }
+
+        function displayMission() {
+            // Display heroes
+            heroesList.innerHTML = currentMission.heroes
+                .map(hero => `<div class="hero-badge">${hero}</div>`)
+                .join('');
+
+            // Display villain
+            villainName.textContent = currentMission.villain;
+
+            // Display story
+            storyText.textContent = currentMission.story;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorDisplay.classList.add('visible');
+            setTimeout(() => {
+                errorDisplay.classList.remove('visible');
+            }, 5000);
+        }
+
+        function hideError() {
+            errorDisplay.classList.remove('visible');
+        }
+    </script>
+</body>
+</html>
