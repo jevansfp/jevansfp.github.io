@@ -268,7 +268,7 @@
 
         <!-- Add Medication Form -->
         <div class="card">
-            <div class="card-title">Add Medication</div>
+            <div class="card-title">Add Medications</div>
             <form id="medForm" class="form-grid">
                 <div class="form-group">
                     <label for="medName">Medication Name</label>
@@ -276,7 +276,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="lastPickup">Date Last Received from Pharmacy</label>
+                    <label for="lastPickup">Date Received from Pharmacy</label>
                     <input type="date" id="lastPickup" required>
                 </div>
 
@@ -285,17 +285,28 @@
                     <input type="number" id="pillCount" required min="1" placeholder="e.g., 90">
                 </div>
 
+                <button type="submit" class="btn btn-primary">Add Medication</button>
+            </form>
+        </div>
+
+        <!-- Fill Dispenser Form -->
+        <div class="card" style="border: 3px solid var(--primary);">
+            <div class="card-title">📦 Fill Medication Dispenser</div>
+            <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
+                Record when you filled the dispenser and for how many days
+            </p>
+            <form id="dispenserForm" class="form-grid">
                 <div class="form-group">
-                    <label for="lastFilled">Date Dispenser Was Filled</label>
-                    <input type="date" id="lastFilled" required>
+                    <label for="dispenserDate">Date Dispenser Was Filled</label>
+                    <input type="date" id="dispenserDate" required>
                 </div>
 
                 <div class="form-group">
                     <label for="daysFilled">Days Filled in Dispenser</label>
-                    <input type="number" id="daysFilled" required min="1" max="14" placeholder="e.g., 14">
+                    <input type="number" id="daysFilled" required min="1" max="14" value="14" placeholder="e.g., 14">
                 </div>
 
-                <button type="submit" class="btn btn-primary">Add Medication</button>
+                <button type="submit" class="btn btn-primary">Update Dispenser Fill</button>
             </form>
         </div>
 
@@ -312,11 +323,16 @@
     </div>
 
     <script>
-        // Load medications from localStorage
+        // Load medications and dispenser info from localStorage
         let medications = JSON.parse(localStorage.getItem('medications') || '[]');
+        let dispenserInfo = JSON.parse(localStorage.getItem('dispenserInfo') || 'null');
 
         const medForm = document.getElementById('medForm');
+        const dispenserForm = document.getElementById('dispenserForm');
         const medList = document.getElementById('medList');
+
+        // Set today's date as default for dispenser form
+        document.getElementById('dispenserDate').valueAsDate = new Date();
 
         // Add medication
         medForm.addEventListener('submit', (e) => {
@@ -326,9 +342,7 @@
                 id: Date.now(),
                 name: document.getElementById('medName').value,
                 lastPickup: document.getElementById('lastPickup').value,
-                pillCount: parseInt(document.getElementById('pillCount').value),
-                lastFilled: document.getElementById('lastFilled').value,
-                daysFilled: parseInt(document.getElementById('daysFilled').value)
+                pillCount: parseInt(document.getElementById('pillCount').value)
             };
 
             medications.push(medication);
@@ -337,7 +351,28 @@
             medForm.reset();
         });
 
+        // Update dispenser fill info
+        dispenserForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            dispenserInfo = {
+                lastFilled: document.getElementById('dispenserDate').value,
+                daysFilled: parseInt(document.getElementById('daysFilled').value)
+            };
+
+            saveDispenserInfo();
+            renderMedications();
+            
+            // Show success message
+            alert('Dispenser fill updated for all medications!');
+        });
+
         function calculateDates(med) {
+            // Can't calculate without dispenser info
+            if (!dispenserInfo) {
+                return null;
+            }
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -345,11 +380,11 @@
             const pillsPerDay = 1; // Could be made configurable
             
             // Date last filled
-            const lastFilledDate = new Date(med.lastFilled);
+            const lastFilledDate = new Date(dispenserInfo.lastFilled);
             
             // Next refill date (when dispenser runs out)
             const nextRefillDate = new Date(lastFilledDate);
-            nextRefillDate.setDate(nextRefillDate.getDate() + med.daysFilled);
+            nextRefillDate.setDate(nextRefillDate.getDate() + dispenserInfo.daysFilled);
             
             // Date pharmacy pickup received
             const lastPickupDate = new Date(med.lastPickup);
@@ -395,8 +430,36 @@
                 medList.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📋</div>
-                        <div>No medications tracked yet. Add one above to get started.</div>
+                        <div>No medications tracked yet. Add medications above to get started.</div>
                     </div>
+                `;
+                return;
+            }
+
+            // Show message if dispenser info not filled
+            if (!dispenserInfo) {
+                medList.innerHTML = `
+                    <div style="background: var(--warning); color: white; padding: 16px; border-radius: 12px; margin-bottom: 16px; font-weight: 600;">
+                        ⚠️ Fill the dispenser information above to see pickup and refill dates
+                    </div>
+                    ${medications.map(med => `
+                        <div class="med-item">
+                            <div class="med-header">
+                                <div class="med-name">${med.name}</div>
+                                <button class="btn btn-small btn-danger" onclick="deleteMed(${med.id})">Delete</button>
+                            </div>
+                            <div class="med-details">
+                                <div class="med-detail">
+                                    <span class="med-detail-label">Last Pharmacy Pickup</span>
+                                    <span class="med-detail-value">${formatDate(med.lastPickup)}</span>
+                                </div>
+                                <div class="med-detail">
+                                    <span class="med-detail-label">Pills in Batch</span>
+                                    <span class="med-detail-value">${med.pillCount} pills</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
                 `;
                 return;
             }
@@ -452,7 +515,7 @@
                             </div>
                             <div class="med-detail">
                                 <span class="med-detail-label">Last Dispenser Fill</span>
-                                <span class="med-detail-value">${formatDate(med.lastFilled)} (${med.daysFilled} days)</span>
+                                <span class="med-detail-value">${formatDate(dispenserInfo.lastFilled)} (${dispenserInfo.daysFilled} days)</span>
                             </div>
                         </div>
 
@@ -487,6 +550,10 @@
 
         function saveMedications() {
             localStorage.setItem('medications', JSON.stringify(medications));
+        }
+
+        function saveDispenserInfo() {
+            localStorage.setItem('dispenserInfo', JSON.stringify(dispenserInfo));
         }
 
         // Initial render
