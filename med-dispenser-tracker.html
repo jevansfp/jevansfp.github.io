@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Med Dispenser Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💊</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --background: #F9FAFB;
+            --surface: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+        }
+
+        .med-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .med-item {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .med-item.needs-attention {
+            border-color: var(--danger);
+            background: #FEF2F2;
+        }
+
+        .med-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .med-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .med-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .med-detail {
+            font-size: 13px;
+        }
+
+        .med-detail-label {
+            color: var(--text-light);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .med-detail-value {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .alert-box {
+            background: var(--danger);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .alert-box.warning {
+            background: var(--warning);
+        }
+
+        .alert-box.success {
+            background: var(--success);
+        }
+
+        .date-highlight {
+            background: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .date-highlight.urgent {
+            background: var(--danger);
+        }
+
+        .date-highlight.warning {
+            background: var(--warning);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .med-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💊 Med Dispenser Tracker</h1>
+            <div class="subtitle">Track pharmacy pickups and dispenser refills</div>
+        </header>
+
+        <!-- Add Medication Form -->
+        <div class="card">
+            <div class="card-title">Add Medication</div>
+            <form id="medForm" class="form-grid">
+                <div class="form-group">
+                    <label for="medName">Medication Name</label>
+                    <input type="text" id="medName" required placeholder="e.g., Aspirin">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastPickup">Date Last Received from Pharmacy</label>
+                    <input type="date" id="lastPickup" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="pillCount">Number of Pills in Batch</label>
+                    <input type="number" id="pillCount" required min="1" placeholder="e.g., 90">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastFilled">Date Dispenser Was Filled</label>
+                    <input type="date" id="lastFilled" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="daysFilled">Days Filled in Dispenser</label>
+                    <input type="number" id="daysFilled" required min="1" max="14" placeholder="e.g., 14">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Medication</button>
+            </form>
+        </div>
+
+        <!-- Medications List -->
+        <div class="card">
+            <div class="card-title">Your Medications</div>
+            <div id="medList" class="med-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>No medications tracked yet. Add one above to get started.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load medications from localStorage
+        let medications = JSON.parse(localStorage.getItem('medications') || '[]');
+
+        const medForm = document.getElementById('medForm');
+        const medList = document.getElementById('medList');
+
+        // Add medication
+        medForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const medication = {
+                id: Date.now(),
+                name: document.getElementById('medName').value,
+                lastPickup: document.getElementById('lastPickup').value,
+                pillCount: parseInt(document.getElementById('pillCount').value),
+                lastFilled: document.getElementById('lastFilled').value,
+                daysFilled: parseInt(document.getElementById('daysFilled').value)
+            };
+
+            medications.push(medication);
+            saveMedications();
+            renderMedications();
+            medForm.reset();
+        });
+
+        function calculateDates(med) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Calculate pills per day (assuming taken daily)
+            const pillsPerDay = 1; // Could be made configurable
+            
+            // Date last filled
+            const lastFilledDate = new Date(med.lastFilled);
+            
+            // Next refill date (when dispenser runs out)
+            const nextRefillDate = new Date(lastFilledDate);
+            nextRefillDate.setDate(nextRefillDate.getDate() + med.daysFilled);
+            
+            // Date pharmacy pickup received
+            const lastPickupDate = new Date(med.lastPickup);
+            
+            // Calculate when pills will run out
+            const pillsRemaining = med.pillCount - (getDaysBetween(lastFilledDate, today) * pillsPerDay);
+            const daysUntilPharmacyNeeded = Math.floor(pillsRemaining / pillsPerDay);
+            const nextPharmacyDate = new Date(today);
+            nextPharmacyDate.setDate(nextPharmacyDate.getDate() + daysUntilPharmacyNeeded);
+            
+            // Days until each event
+            const daysUntilRefill = getDaysBetween(today, nextRefillDate);
+            const daysUntilPharmacy = getDaysBetween(today, nextPharmacyDate);
+
+            return {
+                nextRefillDate,
+                nextPharmacyDate,
+                daysUntilRefill,
+                daysUntilPharmacy,
+                pillsRemaining: Math.max(0, pillsRemaining)
+            };
+        }
+
+        function getDaysBetween(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            return Math.round((date2 - date1) / oneDay);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function getAlertClass(days) {
+            if (days <= 0) return 'urgent';
+            if (days <= 3) return 'urgent';
+            if (days <= 7) return 'warning';
+            return '';
+        }
+
+        function renderMedications() {
+            if (medications.length === 0) {
+                medList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div>No medications tracked yet. Add one above to get started.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by urgency (soonest dates first)
+            const sortedMeds = [...medications].sort((a, b) => {
+                const datesA = calculateDates(a);
+                const datesB = calculateDates(b);
+                const soonestA = Math.min(datesA.daysUntilRefill, datesA.daysUntilPharmacy);
+                const soonestB = Math.min(datesB.daysUntilRefill, datesB.daysUntilPharmacy);
+                return soonestA - soonestB;
+            });
+
+            medList.innerHTML = sortedMeds.map(med => {
+                const dates = calculateDates(med);
+                const needsAttention = dates.daysUntilRefill <= 3 || dates.daysUntilPharmacy <= 3;
+
+                let alerts = '';
+                
+                if (dates.daysUntilRefill <= 0) {
+                    alerts += '<div class="alert-box">⚠️ Dispenser refill overdue!</div>';
+                } else if (dates.daysUntilRefill <= 3) {
+                    alerts += `<div class="alert-box">⚠️ Dispenser needs refilling in ${dates.daysUntilRefill} day(s)</div>`;
+                }
+
+                if (dates.daysUntilPharmacy <= 0) {
+                    alerts += '<div class="alert-box">⚠️ Pharmacy pickup needed now!</div>';
+                } else if (dates.daysUntilPharmacy <= 3) {
+                    alerts += `<div class="alert-box warning">📅 Pharmacy pickup in ${dates.daysUntilPharmacy} day(s)</div>`;
+                }
+
+                return `
+                    <div class="med-item ${needsAttention ? 'needs-attention' : ''}">
+                        <div class="med-header">
+                            <div class="med-name">${med.name}</div>
+                            <button class="btn btn-small btn-danger" onclick="deleteMed(${med.id})">Delete</button>
+                        </div>
+
+                        ${alerts}
+
+                        <div class="med-details">
+                            <div class="med-detail">
+                                <span class="med-detail-label">Last Pharmacy Pickup</span>
+                                <span class="med-detail-value">${formatDate(med.lastPickup)}</span>
+                            </div>
+                            <div class="med-detail">
+                                <span class="med-detail-label">Pills in Batch</span>
+                                <span class="med-detail-value">${med.pillCount} pills</span>
+                            </div>
+                            <div class="med-detail">
+                                <span class="med-detail-label">Pills Remaining</span>
+                                <span class="med-detail-value">${dates.pillsRemaining} pills</span>
+                            </div>
+                            <div class="med-detail">
+                                <span class="med-detail-label">Last Dispenser Fill</span>
+                                <span class="med-detail-value">${formatDate(med.lastFilled)} (${med.daysFilled} days)</span>
+                            </div>
+                        </div>
+
+                        <div class="med-details" style="margin-top: 12px;">
+                            <div class="med-detail">
+                                <span class="med-detail-label">Next Dispenser Refill</span>
+                                <span class="date-highlight ${getAlertClass(dates.daysUntilRefill)}">
+                                    ${formatDate(dates.nextRefillDate)}
+                                    ${dates.daysUntilRefill > 0 ? `(in ${dates.daysUntilRefill} days)` : '(today or overdue)'}
+                                </span>
+                            </div>
+                            <div class="med-detail">
+                                <span class="med-detail-label">Next Pharmacy Pickup</span>
+                                <span class="date-highlight ${getAlertClass(dates.daysUntilPharmacy)}">
+                                    ${formatDate(dates.nextPharmacyDate)}
+                                    ${dates.daysUntilPharmacy > 0 ? `(in ${dates.daysUntilPharmacy} days)` : '(today or overdue)'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteMed(id) {
+            if (confirm('Are you sure you want to delete this medication?')) {
+                medications = medications.filter(med => med.id !== id);
+                saveMedications();
+                renderMedications();
+            }
+        }
+
+        function saveMedications() {
+            localStorage.setItem('medications', JSON.stringify(medications));
+        }
+
+        // Initial render
+        renderMedications();
+
+        // Refresh every minute to update "days until" counters
+        setInterval(renderMedications, 60000);
+    </script>
+</body>
+</html>
