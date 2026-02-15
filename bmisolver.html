@@ -20,8 +20,6 @@
             --text: #1e293b;
             --text-light: #64748b;
             --border: #e2e8f0;
-            --male: #3b82f6;
-            --female: #ec4899;
         }
 
         * {
@@ -71,47 +69,6 @@
             font-size: 14px;
             color: var(--text-light);
             font-weight: 600;
-        }
-
-        .gender-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-
-        .gender-btn {
-            padding: 16px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            background: white;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .gender-btn:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .gender-btn.active.male {
-            background: var(--male);
-            border-color: var(--male);
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .gender-btn.active.female {
-            background: var(--female);
-            border-color: var(--female);
-            color: white;
-            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
         }
 
         .input-group {
@@ -277,16 +234,6 @@
             animation: shake 0.5s ease-out;
         }
 
-        .info-box {
-            margin-top: 24px;
-            padding: 16px;
-            background: #f1f5f9;
-            border-radius: 12px;
-            font-size: 13px;
-            color: var(--text-light);
-            line-height: 1.6;
-        }
-
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -325,15 +272,6 @@
             <div class="header">
                 <h1>⚖️ BMI Solver</h1>
                 <div class="subtitle">Enter any 2 values to calculate the 3rd</div>
-            </div>
-
-            <div class="gender-selector">
-                <button class="gender-btn male active" data-gender="male">
-                    👨 Male
-                </button>
-                <button class="gender-btn female" data-gender="female">
-                    👩 Female
-                </button>
             </div>
 
             <div class="input-group">
@@ -377,20 +315,15 @@
                 <div class="bmi-category" id="bmiCategory"></div>
             </div>
 
-            <div class="info-box">
-                <strong>Note:</strong> BMI calculations are the same for males and females. Gender selection is included for potential future body composition features.
-            </div>
         </div>
     </div>
 
     <script>
         // State
-        let gender = 'male';
         let heightUnit = 'in';
         let weightUnit = 'lbs';
 
         // DOM Elements
-        const genderButtons = document.querySelectorAll('.gender-btn');
         const unitButtons = document.querySelectorAll('.unit-btn');
         const heightInput = document.getElementById('heightInput');
         const weightInput = document.getElementById('weightInput');
@@ -402,15 +335,6 @@
         const resultValue = document.getElementById('resultValue');
         const resultSecondary = document.getElementById('resultSecondary');
         const bmiCategory = document.getElementById('bmiCategory');
-
-        // Gender selection
-        genderButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                genderButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                gender = btn.dataset.gender;
-            });
-        });
 
         // Unit toggle
         unitButtons.forEach(btn => {
